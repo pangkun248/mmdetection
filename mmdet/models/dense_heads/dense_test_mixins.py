@@ -28,11 +28,6 @@ class BBoxTestMixin(object):
             rescale (bool, optional): 是否缩放box.
 
         Returns:
-<<<<<<< HEAD
-            list[tuple[Tensor, Tensor]]: result_list 中的每一项都是 2 元组.
-                第一项是形状为 (n, 5) 的“boxes”,其中 5 代表 (x1, y1, x2, y2, score).
-                第二项是形状为 (n, ) 的“labels”.
-=======
             list[obj:`InstanceData`]: Detection results of each
                 image after the post process. \
                 Each item usually contains following keys. \
@@ -43,7 +38,6 @@ class BBoxTestMixin(object):
                   (num_instances,).
                 - bboxes (Tensor): Has a shape (num_instances, 4),
                   the last dimension 4 arrange as (x1, y1, x2, y2).
->>>>>>> mmdetection/main
         """
         warnings.warn('You are calling `simple_test_bboxes` in '
                       '`dense_test_mixins`, but the `dense_test_mixins`'
@@ -130,32 +124,11 @@ class BBoxTestMixin(object):
             _det_bboxes[:, :4] *= det_bboxes.new_tensor(
                 img_metas[0][0]['scale_factor'])
 
-<<<<<<< HEAD
-        return [
-            (_det_bboxes, det_labels),
-        ]
-
-    def simple_test_rpn(self, x, img_metas):
-        """无增强测试, 仅适用于“RPNHead”及其变体,例如“GARPNHead”等.
-
-        Args:
-            x (tuple[Tensor]): 来自上游网络的特征,每个都是 4D 张量.
-            img_metas (list[dict]): 每张图片的元信息.
-
-        Returns:
-            list[Tensor]: 每张图像的proposal,每个元素shape为 (n, 5),
-            其中 5 代表 (x1, y1, x2, y2, score).
-        """
-        rpn_outs = self(x)
-        proposal_list = self.get_bboxes(*rpn_outs, img_metas=img_metas)
-        return proposal_list
-=======
         results = InstanceData()
         results.bboxes = _det_bboxes[:, :4]
         results.scores = _det_bboxes[:, 4]
         results.labels = det_labels
         return [results]
->>>>>>> mmdetection/main
 
     def aug_test_rpn(self, feats, img_metas):
         """Test with augmentation for only for ``RPNHead`` and its variants,

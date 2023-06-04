@@ -9,36 +9,21 @@ from .utils import weight_reduce_loss, weighted_loss
 
 
 @weighted_loss
-<<<<<<< HEAD
-def gaussian_focal_loss(pred, gaussian_target, alpha=2.0, gamma=4.0):
-    """`Focal Loss <https://arxiv.org/abs/1708.02002>`_的变体. 目标为高斯分布的浮点值.
-
-    Args:
-        pred (torch.Tensor): 网络输出值.
-        gaussian_target (torch.Tensor): 网络输出值的拟合目标(高斯分布).
-        alpha (float, optional): Focal Loss 中的平衡难易样本参数.默认:2.0.
-        gamma (float, optional): 调节负样本loss权重的gamma参数. 默认:4.0.
-=======
 def gaussian_focal_loss(pred: Tensor,
                         gaussian_target: Tensor,
                         alpha: float = 2.0,
                         gamma: float = 4.0,
                         pos_weight: float = 1.0,
                         neg_weight: float = 1.0) -> Tensor:
-    """`Focal Loss <https://arxiv.org/abs/1708.02002>`_ for targets in gaussian
-    distribution.
+    """Focal Loss <https://arxiv.org/abs/1708.02002>`_的变体. 目标为高斯分布的浮点值.
 
     Args:
-        pred (torch.Tensor): The prediction.
-        gaussian_target (torch.Tensor): The learning target of the prediction
-            in gaussian distribution.
-        alpha (float, optional): A balanced form for Focal Loss.
-            Defaults to 2.0.
-        gamma (float, optional): The gamma for calculating the modulating
-            factor. Defaults to 4.0.
-        pos_weight(float): Positive sample loss weight. Defaults to 1.0.
-        neg_weight(float): Negative sample loss weight. Defaults to 1.0.
->>>>>>> mmdetection/main
+        pred (torch.Tensor): 网络输出值.
+        gaussian_target (torch.Tensor): 网络输出值的拟合目标(高斯分布).
+        alpha (float, optional): Focal Loss 中的平衡难易样本参数.
+        gamma (float, optional): 调节负样本loss权重的gamma参数.
+        pos_weight(float): Positive sample loss weight.
+        neg_weight(float): Negative sample loss weight.
     """
     eps = 1e-12
     pos_weights = gaussian_target.eq(1)  # 正样本权重,仅在gt box出现的地方为1
@@ -112,15 +97,10 @@ class GaussianFocalLoss(nn.Module):
     Args:
         alpha (float): Power of prediction.
         gamma (float): Power of target for negative samples.
-<<<<<<< HEAD
-        reduction (str): 可选项: "none", "mean" and "sum".
-        loss_weight (float): 当前loss的权重.
-=======
         reduction (str): Options are "none", "mean" and "sum".
         loss_weight (float): Loss weight of current loss.
         pos_weight(float): Positive sample loss weight. Defaults to 1.0.
         neg_weight(float): Negative sample loss weight. Defaults to 1.0.
->>>>>>> mmdetection/main
     """
 
     def __init__(self,
@@ -139,14 +119,6 @@ class GaussianFocalLoss(nn.Module):
         self.neg_weight = neg_weight
 
     def forward(self,
-<<<<<<< HEAD
-                pred,
-                target,
-                weight=None,
-                avg_factor=None,
-                reduction_override=None):
-        """前向传播函数.
-=======
                 pred: Tensor,
                 target: Tensor,
                 pos_inds: Optional[Tensor] = None,
@@ -155,7 +127,6 @@ class GaussianFocalLoss(nn.Module):
                 avg_factor: Optional[Union[int, float]] = None,
                 reduction_override: Optional[str] = None) -> Tensor:
         """Forward function.
->>>>>>> mmdetection/main
 
         If you want to manually determine which positions are
         positive samples, you can set the pos_index and pos_label
@@ -163,29 +134,16 @@ class GaussianFocalLoss(nn.Module):
         the parameter.
 
         Args:
-<<<<<<< HEAD
-            pred (torch.Tensor): 网络输出值.
-            target (torch.Tensor): 网络输出值的拟合目标(高斯分布).
-            weight (torch.Tensor, optional): 每个输出值的loss权重. 默认: None.
-            avg_factor (int, optional): 用于平均loss的平均因子(一般为正样本个数). 默认: None.
-            reduction_override (str, optional): 用于覆盖Loss类初始化中的self.reduction.
-                默认为None,表示不覆盖.
-=======
-            pred (torch.Tensor): The prediction. The shape is (N, num_classes).
-            target (torch.Tensor): The learning target of the prediction
-                in gaussian distribution. The shape is (N, num_classes).
+            pred (torch.Tensor): 网络输出值的拟合目标(高斯分布). [N, nc].
+            target (torch.Tensor): 网络输出值的拟合目标(高斯分布). [N, nc].
             pos_inds (torch.Tensor): The positive sample index.
                 Defaults to None.
             pos_labels (torch.Tensor): The label corresponding to the positive
                 sample index. Defaults to None.
-            weight (torch.Tensor, optional): The weight of loss for each
-                prediction. Defaults to None.
-            avg_factor (int, float, optional): Average factor that is used to
-                average the loss. Defaults to None.
-            reduction_override (str, optional): The reduction method used to
-                override the original reduction method of the loss.
-                Defaults to None.
->>>>>>> mmdetection/main
+            weight (torch.Tensor, optional): 每个输出值的loss权重.
+            avg_factor (int, float, optional): 用于平均loss的平均因子(一般为正样本个数)
+            reduction_override (str, optional): 用于覆盖Loss类初始化中的self.reduction.
+                默认为None,表示不覆盖.
         """
         assert reduction_override in (None, 'none', 'mean', 'sum')
         reduction = (

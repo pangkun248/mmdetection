@@ -19,26 +19,12 @@ class HourglassModule(BaseModule):
     递归生成模块并使用 res18/34中的BasicBlock 作为基本单元.
 
     Args:
-<<<<<<< HEAD
         depth (int): 当前 HourglassModule 的深度.
         stage_channels (list[int]): 当前和后续 HourglassModule 中子模块的特征通道.
         stage_blocks (list[int]): 当前和后续 HourglassModule 中堆叠的子模块数量.
         norm_cfg (dict): 构造和配置norm层的字典.
-        init_cfg (dict or list[dict], optional): 初始化配置字典.默认: None
         upsample_cfg (dict, optional): 插值层的配置字典.默认: `dict(mode='nearest')`
-=======
-        depth (int): Depth of current HourglassModule.
-        stage_channels (list[int]): Feature channels of sub-modules in current
-            and follow-up HourglassModule.
-        stage_blocks (list[int]): Number of sub-modules stacked in current and
-            follow-up HourglassModule.
-        norm_cfg (ConfigType): Dictionary to construct and config norm layer.
-            Defaults to `dict(type='BN', requires_grad=True)`
-        upsample_cfg (ConfigType): Config dict for interpolate layer.
-            Defaults to `dict(mode='nearest')`
-       init_cfg (dict or ConfigDict, optional): the config to control the
-           initialization.
->>>>>>> mmdetection/main
+        init_cfg (dict or list[dict], optional): 初始化配置字典.默认: None
     """
 
     def __init__(self,
@@ -116,28 +102,14 @@ class HourglassNet(BaseModule):
     <https://arxiv.org/abs/1603.06937>`_ .
 
     Args:
-<<<<<<< HEAD
         downsample_times (int): HourglassModule 中的下采样次数.
         num_stacks (int): 堆叠的 HourglassModule 模块数量,
             1:Hourglass-52, 2:Hourglass-104.
-        stage_channels (list[int]): HourglassModule 中每个子模块的特征通道.
-        stage_blocks (list[int]): HourglassModule 中堆叠的子模块数量.
+        stage_channels (Sequence[int]): HourglassModule 中每个子模块的特征通道.
+        stage_blocks (Sequence[int]): HourglassModule 中堆叠的子模块数量.
         feat_channel (int): HourglassModule 后卷积的特征通道.
         norm_cfg (dict): 构造和配置norm层的字典.
-        init_cfg (dict or list[dict], optional): 权重初始化配置字典.默认: None
-=======
-        downsample_times (int): Downsample times in a HourglassModule.
-        num_stacks (int): Number of HourglassModule modules stacked,
-            1 for Hourglass-52, 2 for Hourglass-104.
-        stage_channels (Sequence[int]): Feature channel of each sub-module in a
-            HourglassModule.
-        stage_blocks (Sequence[int]): Number of sub-modules stacked in a
-            HourglassModule.
-        feat_channel (int): Feature channel of conv after a HourglassModule.
-        norm_cfg (norm_cfg): Dictionary to construct and config norm layer.
-       init_cfg (dict or ConfigDict, optional): the config to control the
-           initialization.
->>>>>>> mmdetection/main
+        init_cfg (dict or ConfigDict, optional): 权重初始化配置字典.默认: None
 
     Example:
         >>> from mmdet.models import HourglassNet
@@ -153,17 +125,6 @@ class HourglassNet(BaseModule):
     """
 
     def __init__(self,
-<<<<<<< HEAD
-                 downsample_times=5,
-                 num_stacks=2,
-                 stage_channels=(256, 256, 384, 384, 384, 512),
-                 stage_blocks=(2, 2, 2, 2, 2, 4),
-                 feat_channel=256,
-                 norm_cfg=dict(type='BN', requires_grad=True),
-                 init_cfg=None):
-        assert init_cfg is None, '为防止异常初始化行为,init_cfg必须为None'
-        super(HourglassNet, self).__init__(init_cfg)
-=======
                  downsample_times: int = 5,
                  num_stacks: int = 2,
                  stage_channels: Sequence = (256, 256, 384, 384, 384, 512),
@@ -174,7 +135,6 @@ class HourglassNet(BaseModule):
         assert init_cfg is None, 'To prevent abnormal initialization ' \
                                  'behavior, init_cfg is not allowed to be set'
         super().__init__(init_cfg)
->>>>>>> mmdetection/main
 
         self.num_stacks = num_stacks
         assert self.num_stacks >= 1

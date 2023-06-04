@@ -18,17 +18,11 @@ from ..utils.misc import empty_instances, unpack_gt_instances
 from .base_roi_head import BaseRoIHead
 
 
-<<<<<<< HEAD
-@HEADS.register_module()
-class CascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
-    """Cascade roi head 包括一个 bbox head 和一个 mask head.
-        注意该Head模块没有shared_head mask_roi_extractor mask_head的配置
-=======
 @MODELS.register_module()
 class CascadeRoIHead(BaseRoIHead):
-    """Cascade roi head including one bbox head and one mask head.
+    """Cascade roi head 包括一个 bbox head 和一个 mask head.
+        注意该Head模块没有shared_head mask_roi_extractor mask_head的配置
 
->>>>>>> mmdetection/main
     https://arxiv.org/abs/1712.00726
     """
 
@@ -59,24 +53,14 @@ class CascadeRoIHead(BaseRoIHead):
             test_cfg=test_cfg,
             init_cfg=init_cfg)
 
-<<<<<<< HEAD
-    def init_bbox_head(self, bbox_roi_extractor, bbox_head):
+    def init_bbox_head(self, bbox_roi_extractor: MultiConfig,
+                       bbox_head: MultiConfig) -> None:
         """初始化 roi box head 以及roi提取模块(RoIPooling或者RoIAlign).
 
         Args:
-            bbox_roi_extractor (dict): roi提取模块的配置.
-            bbox_head (dict): roi box head的配置.
-=======
-    def init_bbox_head(self, bbox_roi_extractor: MultiConfig,
-                       bbox_head: MultiConfig) -> None:
-        """Initialize box head and box roi extractor.
-
-        Args:
             bbox_roi_extractor (:obj:`ConfigDict`, dict or list):
-                Config of box roi extractor.
-            bbox_head (:obj:`ConfigDict`, dict or list): Config
-                of box in box head.
->>>>>>> mmdetection/main
+                roi提取模块的配置.
+            bbox_head (:obj:`ConfigDict`, dict or list): roi box head的配置.
         """
         self.bbox_roi_extractor = ModuleList()
         self.bbox_head = ModuleList()
@@ -93,23 +77,14 @@ class CascadeRoIHead(BaseRoIHead):
             self.bbox_roi_extractor.append(MODELS.build(roi_extractor))
             self.bbox_head.append(MODELS.build(head))
 
-<<<<<<< HEAD
-    def init_mask_head(self, mask_roi_extractor, mask_head):
+    def init_mask_head(self, mask_roi_extractor: MultiConfig,
+                       mask_head: MultiConfig) -> None:
         """初始化 mask head 以及mask roi提取模块.
 
         Args:
-            mask_roi_extractor (dict): mask roi提取模块的配置.
-            mask_head (dict): mask head的配置.
-=======
-    def init_mask_head(self, mask_roi_extractor: MultiConfig,
-                       mask_head: MultiConfig) -> None:
-        """Initialize mask head and mask roi extractor.
-
-        Args:
-            mask_head (dict): Config of mask in mask head.
+            mask_head (dict): mask roi提取模块的配置.
             mask_roi_extractor (:obj:`ConfigDict`, dict or list):
-                Config of mask roi extractor.
->>>>>>> mmdetection/main
+                mask head的配置.
         """
         self.mask_head = nn.ModuleList()
         if not isinstance(mask_head, list):
@@ -131,16 +106,11 @@ class CascadeRoIHead(BaseRoIHead):
             self.share_roi_extractor = True
             self.mask_roi_extractor = self.bbox_roi_extractor
 
-<<<<<<< HEAD
-    def init_assigner_sampler(self):
+    def init_assigner_sampler(self) -> None:
         """Initialize assigner and sampler for each stage.
             sample 只是pos/neg/min_iou_thr从0.5 -> 0.6 -> 0.7
             assigner则是三个完全一样的
         """
-=======
-    def init_assigner_sampler(self) -> None:
-        """Initialize assigner and sampler for each stage."""
->>>>>>> mmdetection/main
         self.bbox_assigner = []
         self.bbox_sampler = []
         if self.train_cfg is not None:
@@ -155,31 +125,19 @@ class CascadeRoIHead(BaseRoIHead):
 
     def _bbox_forward(self, stage: int, x: Tuple[Tensor],
                       rois: Tensor) -> dict:
-        """Box head forward function used in both training and testing.
-
-<<<<<<< HEAD
-    def _bbox_forward(self, stage, x, rois):
         """用于训练和测试的 Box Head前向传播函数.
-            x: [[bs, c, h, w],] * num_level
-            rois: 整个batch图片上的正负样本cat到一起,理论最大值为[bs*sampler.num,5]
-            下面是返回数据的shape
-            cls_score: [bs*sampler.num, num_class+1]
-            bbox_pred: [bs*sampler.num, 4]
-            bbox_feats: [bs*sampler.num, 256, 7, 7]
-=======
+
         Args:
-            stage (int): The current stage in Cascade RoI Head.
-            x (tuple[Tensor]): List of multi-level img features.
-            rois (Tensor): RoIs with the shape (n, 5) where the first
-                column indicates batch id of each RoI.
+            stage (int): 在Cascade ROI Head中的阶段索引.
+            x (tuple[Tensor]): [[bs, c, h, w],] * nl
+            rois (Tensor): batch张图片上的正负样本cat到一起,理论上为[bs*sampler.num,5]
 
         Returns:
              dict[str, Tensor]: Usually returns a dictionary with keys:
 
-                - `cls_score` (Tensor): Classification scores.
-                - `bbox_pred` (Tensor): Box energies / deltas.
-                - `bbox_feats` (Tensor): Extract bbox RoI features.
->>>>>>> mmdetection/main
+                - `cls_score` (Tensor): [bs*sampler.num, nc]
+                - `bbox_pred` (Tensor): [bs*sampler.num, 4]
+                - `bbox_feats` (Tensor): [bs*sampler.num, 256, 7, 7]
         """
         bbox_roi_extractor = self.bbox_roi_extractor[stage]
         bbox_head = self.bbox_head[stage]
@@ -193,25 +151,6 @@ class CascadeRoIHead(BaseRoIHead):
             cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats)
         return bbox_results
 
-<<<<<<< HEAD
-    def _bbox_forward_train(self, stage, x, sampling_results, gt_bboxes,
-                            gt_labels, rcnn_train_cfg):
-        """Run forward function and calculate loss for box head in training.
-            stage: head索引
-            sampling_results: bs张图片的采样结果
-            x: [[bs, c, h, w],] * num_level.
-        """
-        # 整个batch图片上的正负样本cat到一起,[torch.cat(pos_box, neg_box),] * bs
-        rois = bbox2roi([res.bboxes for res in sampling_results])
-        bbox_results = self._bbox_forward(stage, x, rois)
-        # labels, label_weights, bbox_targets, bbox_weights
-        # [bs * (pos_num+neg_num), ] [bs * (pos_num+neg_num), 4]
-        bbox_targets = self.bbox_head[stage].get_targets(
-            sampling_results, gt_bboxes, gt_labels, rcnn_train_cfg)
-        loss_bbox = self.bbox_head[stage].loss(bbox_results['cls_score'],
-                                               bbox_results['bbox_pred'], rois,
-                                               *bbox_targets)
-=======
     def bbox_loss(self, stage: int, x: Tuple[Tensor],
                   sampling_results: List[SamplingResult]) -> dict:
         """Run forward function and calculate loss for box head in training.
@@ -246,7 +185,6 @@ class CascadeRoIHead(BaseRoIHead):
             sampling_results=sampling_results,
             rcnn_train_cfg=self.train_cfg[stage])
         bbox_results.update(bbox_loss_and_target)
->>>>>>> mmdetection/main
 
         return bbox_results
 
@@ -281,26 +219,12 @@ class CascadeRoIHead(BaseRoIHead):
         """Run forward function and calculate loss for mask head in training.
 
         Args:
-<<<<<<< HEAD
-            x (list[Tensor]): [[bs, c, h, w],] * num_level.
-            img_metas (list[dict]): [{img_info},]*bs.图像信息字典列表,其中每个字典
-                有'img_shape', 'scale_factor', 'flip' 等键, 并且还可能包含
-                'filename', 'ori_shape', 'pad_shape', 以及 'img_norm_cfg'.
-                键值详情参见`mmdet/datasets/pipelines/formatting.py:Collect`.
-            proposal_list (list[Tensors]): 来自RPN的roi.
-                [[rpn_proposal.max_per_img, 5], ] * bs. [x1, y1, x2, y2, score]
-            gt_bboxes (list[Tensor]): [[num_gts, 4],] * bs, [x1, y1, x2, y2]
-            gt_labels (list[Tensor]): [[num_gts,],] * bs
-            gt_bboxes_ignore (None | list[Tensor]): 指定loss时忽略的gt box.
-            gt_masks (None | Tensor) : 如果支持分割任务,则表示每个gt box的mask.
-=======
-            stage (int): The current stage in Cascade RoI Head.
-            x (tuple[Tensor]): Tuple of multi-level img features.
+            stage (int): 在Cascade ROI Head中的阶段索引.
+            x (tuple[Tensor]): [[bs, c, h, w],] * nl.
             sampling_results (list["obj:`SamplingResult`]): Sampling results.
             batch_gt_instances (list[:obj:`InstanceData`]): Batch of
                 gt_instance. It usually includes ``bboxes``, ``labels``, and
                 ``masks`` attributes.
->>>>>>> mmdetection/main
 
         Returns:
             dict: Usually returns a dictionary with keys:
@@ -369,18 +293,14 @@ class CascadeRoIHead(BaseRoIHead):
 
                     sampling_result = bbox_sampler.sample(
                         assign_result,
-<<<<<<< HEAD
-                        proposal_list[j],
-                        gt_bboxes[j],
-                        gt_labels[j],
-                        # 指定图片上的各层级特征图 [[1,c,h,w],] * num_level
-                        feats=[lvl_feat[j][None] for lvl_feat in x])
+                        results,
+                        batch_gt_instances[i],
+                        # 指定图片上的各层级特征图 [[1,c,h,w],] * nl
+                        feats=[lvl_feat[i][None] for lvl_feat in x])
                     sampling_results.append(sampling_result)
 
             # 与普通R-CNN仅返回loss不同,Cascade R-CNN会循环对roi回归修正,所以会额外多一些值.
-            bbox_results = self._bbox_forward_train(i, x, sampling_results,
-                                                    gt_bboxes, gt_labels,
-                                                    rcnn_train_cfg)
+            bbox_results = self.bbox_loss(stage, x, sampling_results)
             """ 
             令 N = bs*(pos_num+neg_num), 在roi head中由rpn提供的roi在sampler.sample的时候
             根据add_gt_as_proposals是否将gt插入roi中,以增加roi正样本的数量与质量,然后根据
@@ -397,16 +317,6 @@ class CascadeRoIHead(BaseRoIHead):
                              [N,],    [N,],         [N, 4],       [N, 4],
             }
             """
-=======
-                        results,
-                        batch_gt_instances[i],
-                        feats=[lvl_feat[i][None] for lvl_feat in x])
-                    sampling_results.append(sampling_result)
-
-            # bbox head forward and loss
-            bbox_results = self.bbox_loss(stage, x, sampling_results)
-
->>>>>>> mmdetection/main
             for name, value in bbox_results['loss_bbox'].items():
                 losses[f's{stage}.{name}'] = (
                     value * stage_loss_weight if 'loss' in name else value)
@@ -419,45 +329,16 @@ class CascadeRoIHead(BaseRoIHead):
                     losses[f's{stage}.{name}'] = (
                         value * stage_loss_weight if 'loss' in name else value)
 
-<<<<<<< HEAD
             # 微调box, 这里相当于get_box函数
-            if i < self.num_stages - 1:
-                # [[num_pos, ], ] * bs. target box是否是gt,后续要把来自gt的target box剔除
-                pos_is_gts = [res.pos_is_gt for res in sampling_results]
-                roi_labels = bbox_results['bbox_targets'][0]
-                with torch.no_grad():
-                    cls_score = bbox_results['cls_score']
-                    if self.bbox_head[i].custom_activation:
-                        cls_score = self.bbox_head[i].loss_cls.get_activation(
-                            cls_score)
-
-                    # 如果整个batch的图片上都没有roi,那么直接返回loss.
-                    # 一般这种情况可能由于没有gt,或者iou阈值过高引起的
-                    if cls_score.numel() == 0:
-                        break
-                    # 这里的代码比较难理解,但同时也比较重要.
-                    # 假设某个roi与gt的iou计算过程中被判定为背景,但是经过当前head网络的修正
-                    # 它是有可能被修正为正样本的,所以需要对其cls_target进行修正,
-                    # 即修改为其目前cls_score(剔除背景)的最大值索引,而那些非背景类的
-                    # 那些原本就是正样本,则忽略修改.
-                    roi_labels = torch.where(
-                        roi_labels == self.bbox_head[i].num_classes,
-                        cls_score[:, :-1].argmax(1), roi_labels)
-                    proposal_list = self.bbox_head[i].refine_bboxes(
-                        bbox_results['rois'], roi_labels,
-                        bbox_results['bbox_pred'], pos_is_gts, img_metas)
-
-=======
-            # refine bboxes
             if stage < self.num_stages - 1:
                 bbox_head = self.bbox_head[stage]
                 with torch.no_grad():
                     results_list = bbox_head.refine_bboxes(
                         sampling_results, bbox_results, batch_img_metas)
-                    # Empty proposal
+                    # 如果整个batch的图片上都没有roi,那么直接返回loss.
+                    # 一般这种情况可能由于没有gt,或者iou阈值过高引起的
                     if results_list is None:
                         break
->>>>>>> mmdetection/main
         return losses
 
     def predict_bbox(self,
@@ -471,40 +352,7 @@ class CascadeRoIHead(BaseRoIHead):
         results on the features of the upstream network.
 
         Args:
-<<<<<<< HEAD
             x (tuple[Tensor]): [[bs, c, h, w],]*num_level
-            proposal_list (list(Tensor)): 来自rpn的roi.
-                [[num_roi, 5],] * bs, [x1, y1, x2, y2, score].
-            img_metas (list[dict]): 图像的基础属性.
-            rescale (bool): 是否将结果缩放回原始图像尺寸上. Default: True.
-
-        Returns:
-            list[list[np.ndarray]] or list[tuple]: 当没有mask分支时,
-            [[np.ndarray]*num_class,]*bs. 当模型含有mask分支时,
-            它包含 box 和mask结果.[(box_results,mask_results)]*bs.
-        """
-        assert self.with_bbox, 'Bbox head must be implemented.'
-        num_imgs = len(proposal_list)
-        img_shapes = tuple(meta['img_shape'] for meta in img_metas)
-        ori_shapes = tuple(meta['ori_shape'] for meta in img_metas)
-        scale_factors = tuple(meta['scale_factor'] for meta in img_metas)
-
-        # 变量名中的"ms"表示多级
-        ms_bbox_result = {}
-        ms_segm_result = {}
-        ms_scores = []
-        rcnn_test_cfg = self.test_cfg
-        # [(sampler.num,4),]*bs -> [batch_box, 5] [batch_ind, x1, y1, x2, y2]
-        rois = bbox2roi(proposal_list)
-
-        if rois.shape[0] == 0:
-            # 这里代表整个batch中没有一个roi
-            bbox_results = [[
-                np.zeros((0, 5), dtype=np.float32)
-                for _ in range(self.bbox_head[-1].num_classes)
-            ]] * num_imgs
-=======
-            x (tuple[Tensor]): Feature maps of all scale level.
             batch_img_metas (list[dict]): List of image information.
             rpn_results_list (list[:obj:`InstanceData`]): List of region
                 proposals.
@@ -526,9 +374,11 @@ class CascadeRoIHead(BaseRoIHead):
         """
         proposals = [res.bboxes for res in rpn_results_list]
         num_proposals_per_img = tuple(len(p) for p in proposals)
+        # [(sampler.num,4),]*bs -> [batch_box, 5] [batch_ind, x1, y1, x2, y2]
         rois = bbox2roi(proposals)
 
         if rois.shape[0] == 0:
+            # 这里代表整个batch中没有一个roi
             return empty_instances(
                 batch_img_metas,
                 rois.device,
@@ -536,7 +386,6 @@ class CascadeRoIHead(BaseRoIHead):
                 box_type=self.bbox_head[-1].predict_box_type,
                 num_classes=self.bbox_head[-1].num_classes,
                 score_per_cls=rcnn_test_cfg is None)
->>>>>>> mmdetection/main
 
         rois, cls_scores, bbox_preds = self._refine_roi(
             x=x,
@@ -554,29 +403,6 @@ class CascadeRoIHead(BaseRoIHead):
             rcnn_test_cfg=rcnn_test_cfg)
         return results_list
 
-<<<<<<< HEAD
-        for i in range(self.num_stages):
-            # 前两个是基于rois预测出来的cls_score, reg
-            # {"cls_score":[bs*sampler.num, num_class+1],
-            # "bbox_pred":[bs*sampler.num, 4],
-            # "bbox_feats"=[bs*sampler.num, 256, 7, 7]}
-            bbox_results = self._bbox_forward(i, x, rois)
-
-            # split batch bbox prediction back to each image
-            cls_score = bbox_results['cls_score']
-            bbox_pred = bbox_results['bbox_pred']
-            num_proposals_per_img = tuple(
-                len(proposals) for proposals in proposal_list)
-            # 将一个batch上的roi以图片为单位单独划分出来
-            rois = rois.split(num_proposals_per_img, 0)
-            cls_score = cls_score.split(num_proposals_per_img, 0)
-            if isinstance(bbox_pred, torch.Tensor):  # sabl_head为False
-                bbox_pred = bbox_pred.split(num_proposals_per_img, 0)
-            else:
-                bbox_pred = self.bbox_head[i].bbox_pred_split(
-                    bbox_pred, num_proposals_per_img)
-            ms_scores.append(cls_score)
-=======
     def predict_mask(self,
                      x: Tuple[Tensor],
                      batch_img_metas: List[dict],
@@ -670,7 +496,6 @@ class CascadeRoIHead(BaseRoIHead):
             # split batch bbox prediction back to each image
             cls_scores = bbox_results['cls_score']
             bbox_preds = bbox_results['bbox_pred']
->>>>>>> mmdetection/main
 
             rois = rois.split(num_proposals_per_img, 0)
             cls_scores = cls_scores.split(num_proposals_per_img, 0)
@@ -710,39 +535,17 @@ class CascadeRoIHead(BaseRoIHead):
                         refine_rois_list.append(refined_rois)
                 rois = torch.cat(refine_rois_list)
 
-<<<<<<< HEAD
         # 最终的cls_score不是最后一个stage输出,而是所有stage的平均值
-        cls_score = [
-=======
-        # average scores of each image by stages
         cls_scores = [
->>>>>>> mmdetection/main
             sum([score[i] for score in ms_scores]) / float(len(ms_scores))
             for i in range(len(batch_img_metas))
         ]
         return rois, cls_scores, bbox_preds
 
-<<<<<<< HEAD
-        # 分别对每个图像使用box后处理
-        det_bboxes = []
-        det_labels = []
-        for i in range(num_imgs):
-            det_bbox, det_label = self.bbox_head[-1].get_bboxes(
-                rois[i],
-                cls_score[i],
-                bbox_pred[i],
-                img_shapes[i],
-                scale_factors[i],
-                rescale=rescale,
-                cfg=rcnn_test_cfg)
-            det_bboxes.append(det_bbox)
-            det_labels.append(det_label)
-=======
     def forward(self, x: Tuple[Tensor], rpn_results_list: InstanceList,
                 batch_data_samples: SampleList) -> tuple:
         """Network forward process. Usually includes backbone, neck and head
         forward without any post-processing.
->>>>>>> mmdetection/main
 
         Args:
             x (List[Tensor]): Multi-level features that may have different
@@ -753,73 +556,9 @@ class CascadeRoIHead(BaseRoIHead):
                 the meta information of each image and corresponding
                 annotations.
 
-<<<<<<< HEAD
-        if self.with_mask:
-            if all(det_bbox.shape[0] == 0 for det_bbox in det_bboxes):
-                mask_classes = self.mask_head[-1].num_classes
-                segm_results = [[[] for _ in range(mask_classes)]
-                                for _ in range(num_imgs)]
-            else:
-                if rescale and not isinstance(scale_factors[0], float):
-                    scale_factors = [
-                        torch.from_numpy(scale_factor).to(det_bboxes[0].device)
-                        for scale_factor in scale_factors
-                    ]
-                _bboxes = [
-                    det_bboxes[i][:, :4] *
-                    scale_factors[i] if rescale else det_bboxes[i][:, :4]
-                    for i in range(len(det_bboxes))
-                ]
-                mask_rois = bbox2roi(_bboxes)
-                num_mask_rois_per_img = tuple(
-                    _bbox.size(0) for _bbox in _bboxes)
-                aug_masks = []
-                for i in range(self.num_stages):
-                    mask_results = self._mask_forward(i, x, mask_rois)
-                    mask_pred = mask_results['mask_pred']
-                    # 将mask分支的整个batch预测结果分割成以图片为单位的列表结果
-                    mask_pred = mask_pred.split(num_mask_rois_per_img, 0)
-                    aug_masks.append([
-                        m.sigmoid().cpu().detach().numpy() for m in mask_pred
-                    ])
-
-                # 分别对每个图像应用mask后处理
-                segm_results = []
-                for i in range(num_imgs):
-                    if det_bboxes[i].shape[0] == 0:
-                        segm_results.append(
-                            [[]
-                             for _ in range(self.mask_head[-1].num_classes)])
-                    else:
-                        aug_mask = [mask[i] for mask in aug_masks]
-                        merged_masks = merge_aug_masks(
-                            aug_mask, [[img_metas[i]]] * self.num_stages,
-                            rcnn_test_cfg)
-                        segm_result = self.mask_head[-1].get_seg_masks(
-                            merged_masks, _bboxes[i], det_labels[i],
-                            rcnn_test_cfg, ori_shapes[i], scale_factors[i],
-                            rescale)
-                        segm_results.append(segm_result)
-            ms_segm_result['ensemble'] = segm_results
-
-        if self.with_mask:  # 将每张图片的box结果与mask结果整合到一起
-            results = list(
-                zip(ms_bbox_result['ensemble'], ms_segm_result['ensemble']))
-        else:
-            results = ms_bbox_result['ensemble']
-
-        return results
-
-    def aug_test(self, features, proposal_list, img_metas, rescale=False):
-        """Test with augmentations.
-
-        If rescale is False, then returned bboxes and masks will fit the scale
-        of imgs[0].
-=======
         Returns
             tuple: A tuple of features from ``bbox_head`` and ``mask_head``
             forward.
->>>>>>> mmdetection/main
         """
         results = ()
         batch_img_metas = [
@@ -840,6 +579,7 @@ class CascadeRoIHead(BaseRoIHead):
             for stage in range(self.num_stages):
                 mask_results = self._mask_forward(stage, x, rois)
                 mask_preds = mask_results['mask_preds']
+                # 将mask分支的整个batch预测结果分割成以图片为单位的列表结果
                 mask_preds = mask_preds.split(num_proposals_per_img, 0)
                 aug_masks.append([m.sigmoid().detach() for m in mask_preds])
 

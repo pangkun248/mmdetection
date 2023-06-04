@@ -115,6 +115,7 @@ class StandardRoIHead(BaseRoIHead):
         num_imgs = len(batch_data_samples)
         sampling_results = []
         for i in range(num_imgs):
+            # rename rpn_results.bboxes to rpn_results.priors
             rpn_results = rpn_results_list[i]
             rpn_results.priors = rpn_results.pop('bboxes')
 

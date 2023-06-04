@@ -19,8 +19,7 @@ class FPN(BaseModule):
     Detection <https://arxiv.org/abs/1612.03144>`_.
 
     Args:
-<<<<<<< HEAD
-        in_channels (list[int]): 长度为n,每种尺度的输入通道数.该参数对下面部分参数影响重大!
+        in_channels (list[int]): 每种尺度的输入通道数.该参数对下面部分参数影响重大!
         out_channels (int): 输出通道数(用于统一每种尺度).
         num_outs (int): FPN网络输出的层级数量.
         start_level (int): 构建FPN时会有n层特征图(index∈[0, n-1])输入,
@@ -36,46 +35,13 @@ class FPN(BaseModule):
             - 'on_lateral': 横向转换后的最上面一个特征图,即仅进行1x1卷积的最上层特征图.
             - 'on_output': 进行3x3卷积后的最上层卷积.
         relu_before_extra_convs (bool): 是否在额外卷积之前应用relu. 默认为False.
-        no_norm_on_lateral (bool): Whether to apply norm on lateral.
-            Default: False.
-        conv_cfg (dict): 卷积层的配置字典. Default: None.
-        norm_cfg (dict): norm层的配置字典. Default: None.
-        act_cfg (dict): 激活层的配置字典. Default: None.
-        upsample_cfg (dict): 插值(上采样)层的配置字典. Default: dict(mode='nearest').
-        init_cfg (dict or list[dict], optional): 初始化配置字典.
-=======
-        in_channels (list[int]): Number of input channels per scale.
-        out_channels (int): Number of output channels (used at each scale).
-        num_outs (int): Number of output scales.
-        start_level (int): Index of the start input backbone level used to
-            build the feature pyramid. Defaults to 0.
-        end_level (int): Index of the end input backbone level (exclusive) to
-            build the feature pyramid. Defaults to -1, which means the
-            last level.
-        add_extra_convs (bool | str): If bool, it decides whether to add conv
-            layers on top of the original feature maps. Defaults to False.
-            If True, it is equivalent to `add_extra_convs='on_input'`.
-            If str, it specifies the source feature map of the extra convs.
-            Only the following options are allowed
-
-            - 'on_input': Last feat map of neck inputs (i.e. backbone feature).
-            - 'on_lateral': Last feature map after lateral convs.
-            - 'on_output': The last output feature map after fpn convs.
-        relu_before_extra_convs (bool): Whether to apply relu before the extra
-            conv. Defaults to False.
-        no_norm_on_lateral (bool): Whether to apply norm on lateral.
-            Defaults to False.
-        conv_cfg (:obj:`ConfigDict` or dict, optional): Config dict for
-            convolution layer. Defaults to None.
-        norm_cfg (:obj:`ConfigDict` or dict, optional): Config dict for
-            normalization layer. Defaults to None.
-        act_cfg (:obj:`ConfigDict` or dict, optional): Config dict for
-            activation layer in ConvModule. Defaults to None.
-        upsample_cfg (:obj:`ConfigDict` or dict, optional): Config dict
-            for interpolate layer. Defaults to dict(mode='nearest').
+        no_norm_on_lateral (bool): 是否对lateral进行norm处理.
+        conv_cfg (:obj:`ConfigDict` or dict, optional): 卷积层的配置字典.
+        norm_cfg (:obj:`ConfigDict` or dict, optional): norm层的配置字典.
+        act_cfg (:obj:`ConfigDict` or dict, optional): 激活层的配置字典.
+        upsample_cfg (:obj:`ConfigDict` or dict, optional): 插值(上采样)层的配置字典.
         init_cfg (:obj:`ConfigDict` or dict or list[:obj:`ConfigDict` or \
-            dict]): Initialization config dict.
->>>>>>> mmdetection/main
+            dict]): 初始化配置字典.
 
     Example:
         >>> import torch
@@ -184,11 +150,6 @@ class FPN(BaseModule):
                     inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
 
-<<<<<<< HEAD
-    @auto_fp16()
-    def forward(self, inputs):
-        """前向传播."""
-=======
     def forward(self, inputs: Tuple[Tensor]) -> tuple:
         """Forward function.
 
@@ -199,7 +160,6 @@ class FPN(BaseModule):
         Returns:
             tuple: Feature maps, each is a 4D-tensor.
         """
->>>>>>> mmdetection/main
         assert len(inputs) == len(self.in_channels)
 
         # 1x1卷积过程

@@ -116,21 +116,21 @@ class AnchorGenerator:
         self.use_box_type = use_box_type
 
     @property
-    def num_base_anchors(self): -> List[int]:
+    def num_base_anchors(self) -> List[int]:
         """list[int]: 返回各个层级特征点上的基础anchor数量"""
         return self.num_base_priors
 
     @property
-    def num_base_priors(self): -> List[int]:
+    def num_base_priors(self) -> List[int]:
         """list[int]: 返回各个层级特征点上的先验(anchor)数量"""
         return [base_anchors.size(0) for base_anchors in self.base_anchors]
 
     @property
-    def num_levels(self): -> int:
+    def num_levels(self) -> int:
         """int: 基础anchor在生成时会需要特征图层数"""
         return len(self.strides)
 
-    def gen_base_anchors(self): -> List[Tensor]:
+    def gen_base_anchors(self) -> List[Tensor]:
         """生成基础anchor.
 
         Returns:
@@ -504,7 +504,7 @@ class SSDAnchorGenerator(AnchorGenerator):
         self.base_anchors = self.gen_base_anchors()
         self.use_box_type = use_box_type
 
-    def gen_base_anchors(self): -> List[Tensor]:
+    def gen_base_anchors(self) -> List[Tensor]:
         """生成6个特征图上的以(stride/2,stride/2)为中心点的基础anchor.
         SSD的基础anchor生成策略中,并非是生成len(ratios)*len(scales)个anchor.
         而是针对ratio为1的不同scale(m个),scale为1的不同ratio(n个),m+n-1个anchor

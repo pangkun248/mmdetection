@@ -196,10 +196,8 @@ class FocalLoss(nn.Module):
             reduction_override (str, optional): 用于覆盖初始化方法中的self.reduction.
                 可选 "none", "mean" and "sum".
 =======
-            pred (torch.Tensor): The prediction.
-            target (torch.Tensor): The learning label of the prediction.
-                The target shape support (N,C) or (N,), (N,C) means
-                one-hot form.
+            pred (torch.Tensor): 输入.
+            target (torch.Tensor): 输入要拟合的目标.[N, ] 或是经过one-hot生成的[N, C].
             weight (torch.Tensor, optional): The weight of loss for each
                 prediction. Defaults to None.
             avg_factor (int, optional): Average factor that is used to average
@@ -207,7 +205,6 @@ class FocalLoss(nn.Module):
             reduction_override (str, optional): The reduction method used to
                 override the original reduction method of the loss.
                 Options are "none", "mean" and "sum".
->>>>>>> mmdetection/main
 
         Returns:
             torch.Tensor: 计算的损失

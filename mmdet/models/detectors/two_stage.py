@@ -58,8 +58,7 @@ class TwoStageDetector(BaseDetector):
             rcnn_train_cfg = train_cfg.rcnn if train_cfg is not None else None
             roi_head.update(train_cfg=rcnn_train_cfg)
             roi_head.update(test_cfg=test_cfg.rcnn)
-            roi_head.pretrained = pretrained
-            self.roi_head = build_head(roi_head)
+            self.roi_head = MODELS.build(roi_head)
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg

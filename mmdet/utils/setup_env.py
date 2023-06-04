@@ -50,12 +50,12 @@ def setup_multi_processes(cfg):
         mp.set_start_method(mp_start_method, force=True)
 
     # 禁用opencv多线程以避免系统过载
-    opencv_num_threads = cfg.get('opencv_num_threads', 0)  # 默认为0
+    opencv_num_threads = cfg.get('opencv_num_threads', 0)
     cv2.setNumThreads(opencv_num_threads)
 
     # setup OMP threads
     # 此代码引用自 https://github.com/pytorch/pytorch/blob/master/torch/distributed/run.py  # noqa
-    workers_per_gpu = cfg.data.get('workers_per_gpu', 1)  # 默认为2
+    workers_per_gpu = cfg.data.get('workers_per_gpu', 1)
     if 'train_dataloader' in cfg.data:  # 一般不存在
         workers_per_gpu = \
             max(cfg.data.train_dataloader.get('workers_per_gpu', 1),

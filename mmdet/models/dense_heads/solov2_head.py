@@ -27,10 +27,9 @@ class MaskFeatModule(BaseModule):
     Args:
         in_channels (int): 输入特征图中的通道数.
         feat_channels (int): mask feature map分支的隐藏通道数.
-        start_level (int): 来自 RPN 的起始特征图索引,将从该索引开始用于mask feature map.
-        end_level (int): 来自 RPN 的截至特征图索引,将到该索引为止用于mask feature map.
-        out_channels (int): mask feature map branch的输出通道数. This is the channel count of the mask
-             feature map that to be dynamically convolved with the predicted
+        start_level (int): 来自 FPN 的起始特征图索引,将从该索引开始用于mask feature map.
+        end_level (int): 来自 FPN 的截至特征图索引,将到该索引为止用于mask feature map.
+        out_channels (int): mask feature map 分支的输出通道数. 这也是动态卷积的通道数
              kernel.
         mask_stride (int): mask feature map 输出的下采样因子. 默认: 4.
         conv_cfg (dict): conv层的配置. 默认: None.
@@ -167,10 +166,10 @@ class SOLOV2Head(SOLOHead):
 
     Args:
         mask_feature_head (dict): SOLOv2MaskFeatHead的配置项.
-        dynamic_conv_size (int): Dynamic Conv kernel size. 默认: 1.
-        dcn_cfg (dict): kernel_conv 和 cls_conv中的DCN配置项.默认: None.
+        dynamic_conv_size (int): Dynamic Conv kernel size.
+        dcn_cfg (dict): kernel_conv 和 cls_conv中的DCN配置项.
         dcn_apply_to_all_conv (bool): 在kernel_conv和cls_conv的每一层都使用dcn,
-            还是只在最后一层使用,在SOLOv2-Light上为False. 默认: True.
+            还是只在最后一层使用,在SOLOv2-Light上为False.
         init_cfg (dict or list[dict], optional): 权重初始化配置.
     """
 

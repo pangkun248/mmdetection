@@ -236,9 +236,9 @@ def get_topk_from_heatmap(scores, k=20):
     # [bs, k], 不同的行代表不同的图片,每行代表当前图片中前k个最大值,索引
     topk_scores, topk_inds = torch.topk(scores.view(batch, -1), k)
     # [bs, k](下同)个位置所属的类别
-    topk_clses = torch.div(topk_inds, height * width, rounding_mode='floor')
+    topk_clses = topk_inds // (height * width)
     topk_inds = topk_inds % (height * width)  # 在h*w维度的索引
-    topk_ys = torch.div(topk_inds, width, rounding_mode='floor')  # 所属的y坐标
+    topk_ys = topk_inds // width  # 所属的y坐标
     topk_xs = (topk_inds % width).int().float()  # 所属的x坐标
     return topk_scores, topk_inds, topk_clses, topk_ys, topk_xs
 

@@ -15,19 +15,10 @@ class RandomSampler(BaseSampler):
     """Random sampler.
 
     Args:
-<<<<<<< HEAD:mmdet/core/bbox/samplers/random_sampler.py
         num (int): 样本总数
         pos_fraction (float): 正样本比例
-        neg_pos_ub (int, optional): pos/neg的上限. 默认-1,即无上限.
-        add_gt_as_proposals (bool, optional): 是否将gt box添加进roi. 默认True.
-=======
-        num (int): Number of samples
-        pos_fraction (float): Fraction of positive samples
-        neg_pos_up (int): Upper bound number of negative and
-            positive samples. Defaults to -1.
-        add_gt_as_proposals (bool): Whether to add ground truth
-            boxes as proposals. Defaults to True.
->>>>>>> mmdetection/main:mmdet/models/task_modules/samplers/random_sampler.py
+        neg_pos_up (int): pos/neg的上限. 默认-1,即无上限.
+        add_gt_as_proposals (bool): 是否将gt box添加进roi.
     """
 
     def __init__(self,
@@ -44,18 +35,9 @@ class RandomSampler(BaseSampler):
             add_gt_as_proposals=add_gt_as_proposals)
         self.rng = ensure_rng(kwargs.get('rng', None))
 
-<<<<<<< HEAD:mmdet/core/bbox/samplers/random_sampler.py
-    def random_choice(self, gallery, num):
-        """从样本中随机抽取指定数量样本.返回值类型与输入样本保持一致.
-=======
     def random_choice(self, gallery: Union[Tensor, ndarray, list],
                       num: int) -> Union[Tensor, ndarray]:
-        """Random select some elements from the gallery.
-
-        If `gallery` is a Tensor, the returned indices will be a Tensor;
-        If `gallery` is a ndarray or list, the returned indices will be a
-        ndarray.
->>>>>>> mmdetection/main:mmdet/models/task_modules/samplers/random_sampler.py
+        """从样本中随机抽取指定数量样本.返回值类型与输入样本保持一致.
 
         Args:
             gallery (Tensor | ndarray | list): 样本池.

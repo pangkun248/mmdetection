@@ -305,8 +305,6 @@ class SSDHead(AnchorHead):
             batch_img_metas,
             batch_gt_instances_ignore=batch_gt_instances_ignore,
             unmap_outputs=True)
-        if cls_reg_targets is None:
-            return None
         # labels_list -> [[bs, h * w * na, ], ] * nl. 其他同理
         (labels_list, label_weights_list, bbox_targets_list, bbox_weights_list,
          avg_factor) = cls_reg_targets
@@ -319,15 +317,15 @@ class SSDHead(AnchorHead):
                 num_images, -1, self.cls_out_channels) for s in cls_scores
         ], 1)
         # [[bs, h * w * na], ] * nl -> [bs, nl * h * w * na]
-        all_labels = torch.cat(labels_list, -1)
-        all_label_weights = torch.cat(label_weights_list, -1)
+        all_labels = torch.cat(labels_list, -1).view(num_images, -1)
+        all_label_weights = torch.cat(label_weights_list, -1).view(num_images, -1)
         all_bbox_preds = torch.cat([  # 与 all_cls_scores 同理
             b.permute(0, 2, 3, 1).reshape(num_images, -1, 4)
             for b in bbox_preds
         ], -2)
         # [[bs, h * w * na, 4], ] * nl -> [bs, nl * h * w * na, 4]
-        all_bbox_targets = torch.cat(bbox_targets_list, -2)
-        all_bbox_weights = torch.cat(bbox_weights_list, -2)
+        all_bbox_targets = torch.cat(bbox_targets_list, -2).view(num_images, -1, 4)
+        all_bbox_weights = torch.cat(bbox_weights_list, -2).view(num_images, -1, 4)
 
         all_anchors = []  # 最终为[[nl*h*w*na, 4], ] * bs
         for i in range(num_images):  # SSD300,每张图片上的anchor的shape都是[8732, 4].

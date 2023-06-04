@@ -26,18 +26,18 @@ class AnchorFreeHead(BaseDenseHead):
         in_channels (int): 输入特征图中的通道数.
         feat_channels (int): 隐藏通道数. 用于子类.
         stacked_convs (int): head部分重复的conv数量.
-        strides (tuple): 各个特征图的下采样倍数.
+        strides (Sequence[int] or Sequence[Tuple[int, int]]): 各个特征图的下采样倍数.
         dcn_on_last_conv (bool): If true, 在最后一层使用dcn. Default: False.
-        conv_bias (bool | str): 如果值为 `auto`,将由 norm_cfg 决定. 如果 `norm_cfg` 为 None,
+        conv_bias (bool or str): 如果值为 `auto`,将由 norm_cfg 决定. 如果 `norm_cfg` 为 None,
             则 conv 的偏差将设置为 True, 否则False. Default: "auto".
-        loss_cls (dict): 分类损失的配置.
-        loss_bbox (dict): 回归损失的配置.
-        bbox_coder (dict): box的编解码配置. Default 'DistancePointBBoxCoder'.
-        conv_cfg (dict): 卷积层的配置字典. Default: None.
-        norm_cfg (dict): norm层的配置字典. Default: None.
-        train_cfg (dict): head的训练配置.
-        test_cfg (dict): head的测试配置.
-        init_cfg (dict or list[dict], optional): 参数初始化配置字典.
+        loss_cls (:obj:`ConfigDict` or dict): 分类损失的配置.
+        loss_bbox (:obj:`ConfigDict` or dict): 回归损失的配置.
+        bbox_coder (:obj:`ConfigDict` or dict): box的编解码配置. Default 'DistancePointBBoxCoder'.
+        conv_cfg (:obj:`ConfigDict` or dict, Optional): 卷积层的配置字典. Default: None.
+        norm_cfg (:obj:`ConfigDict` or dict, Optional): norm层的配置字典. Default: None.
+        train_cfg (:obj:`ConfigDict` or dict, Optional): head的训练配置.
+        test_cfg (:obj:`ConfigDict` or dict, Optional): head的测试配置.
+        init_cfg (:obj:`ConfigDict` or dict or list[:obj:`ConfigDict` or dict]): 参数初始化配置字典.
     """  # noqa: W605
 
     _version = 1
@@ -213,11 +213,11 @@ class AnchorFreeHead(BaseDenseHead):
         """
         return multi_apply(self.forward_single, x)[:2]
 
-    def forward_single(self, x):
-        """单层级上的前向传播.
+    def forward_single(self, x: Tensor) -> Tuple[Tensor, ...]:
+        """Forward features of a single scale level.
 
         Args:
-            x (Tensor): 指定stride的 FPN 特征图.
+            x (Tensor): FPN feature maps of the specified stride.
 
         Returns:
             tuple: 最终预测的cls, reg,以及分类卷积后的分类特征图,回归卷积后的回归特征图,

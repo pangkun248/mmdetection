@@ -110,17 +110,8 @@ class MlvlPointGenerator:
         return len(self.strides)
 
     @property
-<<<<<<< HEAD:mmdet/core/anchor/point_generator.py
-    def num_base_priors(self):
-        """list[int]: 各层级上特征点的先验(点)数,它在anchor_base中称为先验(框)数"""
-        return [1 for _ in range(len(self.strides))]
-
-    def _meshgrid(self, x, y, row_major=True):
-        yy, xx = torch.meshgrid(y, x, indexing='ij')
-=======
     def num_base_priors(self) -> List[int]:
-        """list[int]: The number of priors (points) at a point
-        on the feature grid"""
+        """list[int]: 各层级上特征点的先验(点)数,它在anchor_base中称为先验(框)数"""
         return [1 for _ in range(len(self.strides))]
 
     def _meshgrid(self,
@@ -128,7 +119,6 @@ class MlvlPointGenerator:
                   y: Tensor,
                   row_major: bool = True) -> Tuple[Tensor, Tensor]:
         yy, xx = torch.meshgrid(y, x)
->>>>>>> mmdetection/main:mmdet/models/task_modules/prior_generators/point_generator.py
         if row_major:
             # 警告 .flatten() 会导致 ONNX 导出错误,因此必须在此处使用 reshape
             return xx.reshape(-1), yy.reshape(-1)
@@ -137,38 +127,20 @@ class MlvlPointGenerator:
             return yy.reshape(-1), xx.reshape(-1)
 
     def grid_priors(self,
-<<<<<<< HEAD:mmdet/core/anchor/point_generator.py
-                    featmap_sizes,
-                    dtype=torch.float32,
-                    device='cuda',
-                    with_stride=False):
-        """生成多层级的先验点.
-
-        Args:
-            featmap_sizes (list[tuple]): 多层级的特征图大小, [[h, w],] * num_level.
-            dtype (:obj:`dtype`): priors的类型. Default: torch.float32.
-            device (str): 在该设备上生成priors.
-            with_stride (bool): 是否将stride合并到先验点的坐标上去.
-=======
                     featmap_sizes: List[Tuple],
                     dtype: torch.dtype = torch.float32,
                     device: DeviceType = 'cuda',
                     with_stride: bool = False) -> List[Tensor]:
-        """Generate grid points of multiple feature levels.
+        """生成多层级的先验点.
 
         Args:
-            featmap_sizes (list[tuple]): List of feature map sizes in
-                multiple feature levels, each size arrange as
-                as (h, w).
-            dtype (:obj:`dtype`): Dtype of priors. Defaults to torch.float32.
-            device (str | torch.device): The device where the anchors will be
-                put on.
-            with_stride (bool): Whether to concatenate the stride to
-                the last dimension of points.
->>>>>>> mmdetection/main:mmdet/models/task_modules/prior_generators/point_generator.py
+            featmap_sizes (list[tuple]): 多层级的特征图大小, [[h, w],] * nl.
+            dtype (:obj:`dtype`): priors的类型.
+            device (str | torch.device): 在该设备上生成priors.
+            with_stride (bool): 是否将stride合并到先验点的坐标上去.
 
         Return:
-            list[torch.Tensor]: 多个特征图上的先验点. 默认:[[h*w, 2],] * num_level
+            list[torch.Tensor]: 多个特征图上的先验点. 默认:[[h*w, 2],] * nl
             当with_stride为 False 时, [h*w, 2], 2 -> [x, y]
             当with_stride为 True 时, [h*w, 4], 4 -> [x, y, stride_w, stride_h]
                 priors中心偏移grid左上角offset*(stride_h/w)/2个单位像素.
@@ -187,42 +159,22 @@ class MlvlPointGenerator:
         return multi_level_priors
 
     def single_level_grid_priors(self,
-<<<<<<< HEAD:mmdet/core/anchor/point_generator.py
-                                 featmap_size,
-                                 level_idx,
-                                 dtype=torch.float32,
-                                 device='cuda',
-                                 with_stride=False):
-        """生成单层特征图上的网格点.
-=======
                                  featmap_size: Tuple[int],
                                  level_idx: int,
                                  dtype: torch.dtype = torch.float32,
                                  device: DeviceType = 'cuda',
                                  with_stride: bool = False) -> Tensor:
-        """Generate grid Points of a single level.
->>>>>>> mmdetection/main:mmdet/models/task_modules/prior_generators/point_generator.py
+        """生成单层特征图上的网格点.
 
         注意:
             此函数通常由方法 ``self.grid_priors`` 调用.
 
         Args:
-<<<<<<< HEAD:mmdet/core/anchor/point_generator.py
             featmap_size (tuple[int]): 特征图的大小, 表示为[h, w].
             level_idx (int): 对应特征图的索引.
-            dtype (:obj:`dtype`): priors的类型. 默认: torch.float32.
-            device (str, optional): 在该设备上生成priors.
+            dtype (:obj:`dtype`): priors的类型.
+            device (str | torch.device): 在该设备上生成priors.
             with_stride (bool): 是否将stride与prior中心坐标合并到一起.
-=======
-            featmap_size (tuple[int]): Size of the feature maps, arrange as
-                (h, w).
-            level_idx (int): The index of corresponding feature map level.
-            dtype (:obj:`dtype`): Dtype of priors. Defaults to torch.float32.
-            device (str | torch.device): The device the tensor will be put on.
-                Defaults to 'cuda'.
-            with_stride (bool): Concatenate the stride to the last dimension
-                of points.
->>>>>>> mmdetection/main:mmdet/models/task_modules/prior_generators/point_generator.py
 
         Return:
             Tensor: 单个特征图上的先验点,偏移grid左上角offset*(stride_h/w)/2个单位像素.

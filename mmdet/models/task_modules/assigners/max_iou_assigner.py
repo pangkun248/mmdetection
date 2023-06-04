@@ -27,7 +27,6 @@ class MaxIoUAssigner(BaseAssigner):
             `min_pos_iou` 的设置主要为避免将与 GT 具有极小 iou 的 box 被分配为正样本.
             它在 1x(12epoch) 的训练中带来了 0.3 mAP 的提升,但不影响 3x 的性能. 更多比较参考:
             `PR #7464 <https://github.com/open-mmlab/mmdetection/pull/7464>`_.
-<<<<<<< HEAD:mmdet/core/bbox/assigners/max_iou_assigner.py
         gt_max_assign_all (bool): 是否将该gt索引(1-base)分配给 所有与该gt具有相同最高IOU的 box.
         ignore_iof_thr (float): 忽略 box 的 IoF 阈值(如果指定了 `gt_bboxes_ignore`).
             负值意味着不忽略任何 box.
@@ -36,22 +35,7 @@ class MaxIoUAssigner(BaseAssigner):
             但在二阶段是不允许的. 详情参阅步骤 4.
         gpu_assign_thr (int): GPU分配的GT数量上限. 当 gt 的数量高于此阈值时, 将在 CPU 设备上分配.
             负值表示不在 CPU 上分配.
-=======
-        gt_max_assign_all (bool): Whether to assign all bboxes with the same
-            highest overlap with some gt to that gt.
-        ignore_iof_thr (float): IoF threshold for ignoring bboxes (if
-            `gt_bboxes_ignore` is specified). Negative values mean not
-            ignoring any bboxes.
-        ignore_wrt_candidates (bool): Whether to compute the iof between
-            `bboxes` and `gt_bboxes_ignore`, or the contrary.
-        match_low_quality (bool): Whether to allow low quality matches. This is
-            usually allowed for RPN and single stage detectors, but not allowed
-            in the second stage. Details are demonstrated in Step 4.
-        gpu_assign_thr (int): The upper bound of the number of GT for GPU
-            assign. When the number of gt is above this threshold, will assign
-            on CPU device. Negative values mean not assign on CPU.
         iou_calculator (dict): Config of overlaps Calculator.
->>>>>>> mmdetection/main:mmdet/models/task_modules/assigners/max_iou_assigner.py
     """
 
     def __init__(self,
@@ -74,17 +58,12 @@ class MaxIoUAssigner(BaseAssigner):
         self.match_low_quality = match_low_quality
         self.iou_calculator = TASK_UTILS.build(iou_calculator)
 
-<<<<<<< HEAD:mmdet/core/bbox/assigners/max_iou_assigner.py
-    def assign(self, bboxes, gt_bboxes, gt_bboxes_ignore=None, gt_labels=None):
-        """将 gt_bboxes 按规则分配给 bbox.
-=======
     def assign(self,
                pred_instances: InstanceData,
                gt_instances: InstanceData,
                gt_instances_ignore: Optional[InstanceData] = None,
                **kwargs) -> AssignResult:
-        """Assign gt to bboxes.
->>>>>>> mmdetection/main:mmdet/models/task_modules/assigners/max_iou_assigner.py
+        """将 gt 按规则分配给 box.
 
         在 一阶段网络 或 多阶段的RPN 中,bbox一般为anchor或proposal
         本质上来说proposal与anchor的意义并没有什么分别,只是二者来源不同.
@@ -99,13 +78,6 @@ class MaxIoUAssigner(BaseAssigner):
         4. 对于每个 gt, 分配与其有最大IOU的box(可能不止一个)给它
 
         Args:
-<<<<<<< HEAD:mmdet/core/bbox/assigners/max_iou_assigner.py
-            bboxes (Tensor): 要为其分配gt box 的pred box, shape(n, 4).
-            gt_bboxes (Tensor): gt box, shape (k, 4).
-            gt_bboxes_ignore (Tensor, optional): 被忽略的gt box,
-                如果不为None,其shape为[num_ignored_gts, 4]
-            gt_labels (Tensor, optional): gt_bboxes对应的label, shape (k, ).
-=======
             pred_instances (:obj:`InstanceData`): Instances of model
                 predictions. It includes ``priors``, and the priors can
                 be anchors or points, or the bboxes predicted by the
@@ -120,7 +92,6 @@ class MaxIoUAssigner(BaseAssigner):
                 to be ignored during training. It includes ``bboxes``
                 attribute data that is ignored during training and testing.
                 Defaults to None.
->>>>>>> mmdetection/main:mmdet/models/task_modules/assigners/max_iou_assigner.py
 
         Returns:
             :obj:`AssignResult`: 分配结果.
@@ -157,11 +128,7 @@ class MaxIoUAssigner(BaseAssigner):
             if gt_bboxes_ignore is not None:
                 gt_bboxes_ignore = gt_bboxes_ignore.cpu()
 
-<<<<<<< HEAD:mmdet/core/bbox/assigners/max_iou_assigner.py
-        overlaps = self.iou_calculator(gt_bboxes, bboxes)  # 计算gt与box的IOU
-=======
-        overlaps = self.iou_calculator(gt_bboxes, priors)
->>>>>>> mmdetection/main:mmdet/models/task_modules/assigners/max_iou_assigner.py
+        overlaps = self.iou_calculator(gt_bboxes, priors)  # 计算gt与box的IOU
 
         # 和gt_bboxes_ignore的IOU大于ignore_iof_thr的 所有box与所有gt的IOU都被设置-1
         if (self.ignore_iof_thr > 0 and gt_bboxes_ignore is not None
@@ -190,14 +157,8 @@ class MaxIoUAssigner(BaseAssigner):
         """Assign w.r.t. the overlaps of priors with gts.
 
         Args:
-<<<<<<< HEAD:mmdet/core/bbox/assigners/max_iou_assigner.py
             overlaps (Tensor): k个gt与n个box之间的iou,[k, n].
-            gt_labels (Tensor, optional): k个gt的label, [k, ].
-=======
-            overlaps (Tensor): Overlaps between k gt_bboxes and n bboxes,
-                shape(k, n).
-            gt_labels (Tensor): Labels of k gt_bboxes, shape (k, ).
->>>>>>> mmdetection/main:mmdet/models/task_modules/assigners/max_iou_assigner.py
+            gt_labels (Tensor):k个gt的label, [k, ].
 
         Returns:
             :obj:`AssignResult`: 分配结果.
@@ -257,24 +218,13 @@ class MaxIoUAssigner(BaseAssigner):
                     else:
                         assigned_gt_inds[gt_argmax_overlaps[i]] = i + 1
 
-<<<<<<< HEAD:mmdet/core/bbox/assigners/max_iou_assigner.py
-        if gt_labels is not None:  # 由于负样本在assigned_gt_inds上记为0,所以只能通过>0的值得gt索引来获取gt label
-            assigned_labels = assigned_gt_inds.new_full((num_bboxes, ), -1)
-            pos_inds = torch.nonzero(
-                assigned_gt_inds > 0, as_tuple=False).squeeze()
-            if pos_inds.numel() > 0:
-                assigned_labels[pos_inds] = gt_labels[
-                    assigned_gt_inds[pos_inds] - 1]
-        else:
-            assigned_labels = None
-=======
         assigned_labels = assigned_gt_inds.new_full((num_bboxes, ), -1)
+        # 由于负样本在assigned_gt_inds上记为0,所以只能通过>0的值得gt索引来获取gt label
         pos_inds = torch.nonzero(
             assigned_gt_inds > 0, as_tuple=False).squeeze()
         if pos_inds.numel() > 0:
             assigned_labels[pos_inds] = gt_labels[assigned_gt_inds[pos_inds] -
                                                   1]
->>>>>>> mmdetection/main:mmdet/models/task_modules/assigners/max_iou_assigner.py
 
         # assigned_gt_inds代表所有box对应的样本属性[-1,len(gt)],其中-1为忽略,0为负样本,其余为gt index(1-base)
         # max_overlaps代表单个anchor与所有gt的最大iou,shape为(n,), n为anchor个数

@@ -578,7 +578,11 @@ class BBoxHead(BaseModule):
             raise ValueError('The last dim of `cls_scores` should equal to '
                              '`num_classes` or `num_classes + 1`,'
                              f'but got {cls_scores.shape[-1]}.')
-        # 当预测label为背景类时,将其改为其他最大类别概率对应的类别.
+        # 这里的代码比较难理解,但同时也比较重要.
+        # 假设某个roi与gt的iou计算过程中被判定为背景,但是经过当前head网络的修正
+        # 它是有可能被修正为正样本的,所以需要对其cls_target进行修正,
+        # 即修改为其目前cls_score(剔除背景)的最大值索引,而那些非背景类的
+        # 那些原本就是正样本,则忽略修改.
         labels = torch.where(labels == self.num_classes, cls_scores.argmax(1),
                              labels)
 

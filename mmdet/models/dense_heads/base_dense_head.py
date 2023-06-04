@@ -129,19 +129,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
         head."""
         pass
 
-<<<<<<< HEAD
-    @force_fp32(apply_to=('cls_scores', 'bbox_preds'))
-    def get_bboxes(self,
-                   cls_scores,
-                   bbox_preds,
-                   score_factors=None,
-                   img_metas=None,
-                   cfg=None,
-                   rescale=False,
-                   with_nms=True,
-                   **kwargs):
-        """将网络输出转换为 box 结果.
-=======
     def loss_and_predict(
         self,
         x: Tuple[Tensor],
@@ -221,7 +208,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                         with_nms: bool = True) -> InstanceList:
         """Transform a batch of output features extracted from the head into
         bbox results.
->>>>>>> mmdetection/main
 
         注意: 当 score_factors 不为 None时, cls_scores 通常乘以它,
         然后得到 NMS 中使用的真正scores,如 FCOS 中的 CenterNess, ATSS 中的 IoU 分支.
@@ -230,42 +216,17 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
         如果网络没有obj_score,则直接使用cls_score作为box的socre
 
         Args:
-<<<<<<< HEAD
             cls_scores (list[Tensor]): 所有特征层级上cls score,
-                [[bs, na * nc, h, w],]*num_levels. 其中H、W随着层级不同而不同
+                [[bs, na * nc, h, w],]*nl. 其中H、W随着层级不同而不同
             bbox_preds (list[Tensor]): 所有特征层级上box reg,
-                [[bs, na * 4, h, w],]*num_levels.
-            score_factors (list[Tensor], Optional): 所有特征层级上box conf,
-                [[bs, na, h, w], ]*num_levels. 默认为None,即网络不输出该结果
-            img_metas (list[dict], Optional): [dict] * bs,图像元信息.
-            cfg (mmcv.Config, Optional): 测试 / 后处理 配置,
+                [[bs, na * 4, h, w],]*nl.
+            score_factors (list[Tensor], optional): 所有特征层级上box obj,
+                [[bs, na, h, w], ]*nl. 默认为None,即网络不输出该结果
+            batch_img_metas (list[dict], Optional): bs张图像元信息.
+            cfg (ConfigDict, optional): 测试 / 后处理 配置,
                 如果为 None, test_cfg 将被使用.
-            rescale (bool): 如果为 True, 则将box*ori_h/new_h以适配原始图像的尺寸.
-            with_nms (bool): 如果为 True, 在返回box之前做 nms.
-
-        Returns:
-            list[list[Tensor, Tensor]]: [[det_box, det_label], ] * bs.
-                det_box: [n, 5],其中 5 代表 [x1, y1, x2, y2, score].
-                det_label: [n,].
-=======
-            cls_scores (list[Tensor]): Classification scores for all
-                scale levels, each is a 4D-tensor, has shape
-                (batch_size, num_priors * num_classes, H, W).
-            bbox_preds (list[Tensor]): Box energies / deltas for all
-                scale levels, each is a 4D-tensor, has shape
-                (batch_size, num_priors * 4, H, W).
-            score_factors (list[Tensor], optional): Score factor for
-                all scale level, each is a 4D-tensor, has shape
-                (batch_size, num_priors * 1, H, W). Defaults to None.
-            batch_img_metas (list[dict], Optional): Batch image meta info.
-                Defaults to None.
-            cfg (ConfigDict, optional): Test / postprocessing
-                configuration, if None, test_cfg would be used.
-                Defaults to None.
-            rescale (bool): If True, return boxes in original image space.
-                Defaults to False.
-            with_nms (bool): If True, do nms before return boxes.
-                Defaults to True.
+            rescale (bool): 如果为 True, 则将输出放缩回原始图像空间上.
+            with_nms (bool): 在返回box之前是否做nms.
 
         Returns:
             list[:obj:`InstanceData`]: Object detection results of each image
@@ -277,7 +238,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                   (num_instances, ).
                 - bboxes (Tensor): Has a shape (num_instances, 4),
                   the last dimension 4 arrange as (x1, y1, x2, y2).
->>>>>>> mmdetection/main
         """
         assert len(cls_scores) == len(bbox_preds)
 
@@ -299,76 +259,19 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
 
         result_list = []
 
-<<<<<<< HEAD
-        for img_id in range(len(img_metas)):
-            img_meta = img_metas[img_id]
-            # [[na*nc, h, w],] * num_level. 其他同理
-            cls_score_list = select_single_mlvl(cls_scores, img_id)
-            bbox_pred_list = select_single_mlvl(bbox_preds, img_id)
-=======
         for img_id in range(len(batch_img_metas)):
             img_meta = batch_img_metas[img_id]
+            # [[na*nc, h, w],] * num_level. 其他同理
             cls_score_list = select_single_mlvl(
                 cls_scores, img_id, detach=True)
             bbox_pred_list = select_single_mlvl(
                 bbox_preds, img_id, detach=True)
->>>>>>> mmdetection/main
             if with_score_factors:
                 score_factor_list = select_single_mlvl(
                     score_factors, img_id, detach=True)
             else:
                 score_factor_list = [None for _ in range(num_levels)]
 
-<<<<<<< HEAD
-            results = self._get_bboxes_single(cls_score_list, bbox_pred_list,
-                                              score_factor_list, mlvl_priors,
-                                              img_meta, cfg, rescale, with_nms,
-                                              **kwargs)
-            # 默认[det_bboxes[n,5], det_labels[n,]], RPN这种网络时仅有det_bboxes
-            result_list.append(results)
-        return result_list
-
-    def _get_bboxes_single(self,
-                           cls_score_list,
-                           bbox_pred_list,
-                           score_factor_list,
-                           mlvl_priors,
-                           img_meta,
-                           cfg,
-                           rescale=False,
-                           with_nms=True,
-                           **kwargs):
-        """将单个图像的输出转换为 predict_bbox.
-
-        Args:
-            cls_score_list (list[Tensor]): 来自单个图像的所有层级别的cls score,
-                [[na * nc, h, w],] * num_level.
-            bbox_pred_list (list[Tensor]): 来自单个图像的所有层级别的box reg
-                [[na * 4, h, w],] * num_level.
-            score_factor_list (list[Tensor]): 来自单个图像的所有层级别的box conf
-                [[na, h, w],] * num_level.
-            mlvl_priors (list[Tensor]): 网络生成的多层级先验.
-                在anchor-base中,[[h * w * na, 4], ] * num_level. na代表num_anchor.
-                在anchor-free中,[[h * w * np, 2], ] * num_level. np代表num_prior.
-                但当with_stride=True时, 最后一维为4->[x, y, stride_w, stride_h]
-            img_meta (dict): 图像元信息.
-            cfg (mmcv.Config): 测试 或者 后处理 配置,
-                如果为 None, test_cfg 将被使用.
-            rescale (bool): 如果为 True, 则将box*ori_h/new_h以适配原始图像的尺寸.
-            with_nms (bool): 如果为 True, 对box做nms.
-
-        Returns:
-            tuple[Tensor]: 检测到的box和label的结果.
-                If with_nms is False and mlvl_score_factor is None:
-                    return mlvl_bboxes and mlvl_scores,
-                else:
-                    return mlvl_bboxes, mlvl_scores and mlvl_score_factor.
-                with_nms 为 False 时一般在aug test中使用.
-                如果with_nms 为 True, 则返回以下格式的数据
-
-                - det_bboxes (Tensor): [num_bboxes, 5],
-                - det_labels (Tensor): [num_bboxes].
-=======
             results = self._predict_by_feat_single(
                 cls_score_list=cls_score_list,
                 bbox_pred_list=bbox_pred_list,
@@ -390,26 +293,20 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                                 cfg: ConfigDict,
                                 rescale: bool = False,
                                 with_nms: bool = True) -> InstanceData:
-        """Transform a single image's features extracted from the head into
-        bbox results.
+        """将单个图像的输出转换为 predict_bbox.
 
         Args:
-            cls_score_list (list[Tensor]): Box scores from all scale
-                levels of a single image, each item has shape
-                (num_priors * num_classes, H, W).
-            bbox_pred_list (list[Tensor]): Box energies / deltas from
-                all scale levels of a single image, each item has shape
-                (num_priors * 4, H, W).
-            score_factor_list (list[Tensor]): Score factor from all scale
-                levels of a single image, each item has shape
-                (num_priors * 1, H, W).
-            mlvl_priors (list[Tensor]): Each element in the list is
-                the priors of a single level in feature pyramid. In all
-                anchor-based methods, it has shape (num_priors, 4). In
-                all anchor-free methods, it has shape (num_priors, 2)
-                when `with_stride=True`, otherwise it still has shape
-                (num_priors, 4).
-            img_meta (dict): Image meta info.
+            cls_score_list (list[Tensor]): 来自单个图像的所有层级别的cls score,
+                [[na * nc, h, w],] * nl.
+            bbox_pred_list (list[Tensor]): 来自单个图像的所有层级别的box reg
+                [[na * 4, h, w],] * nl.
+            score_factor_list (list[Tensor]): 来自单个图像的所有层级别的box obj
+                [[na, h, w],] * num_level.
+            mlvl_priors (list[Tensor]): 络生成的多层级先验.
+                在anchor-base中,[[h * w * na, 4], ] * num_level. na代表num_anchor.
+                在anchor-free中,[[h * w * np, 2], ] * num_level. np代表num_prior.
+                但当with_stride=True时, 最后一维为4->[x, y, stride_w, stride_h]
+            img_meta (dict): 图像元信息.
             cfg (mmengine.Config): Test / postprocessing configuration,
                 if None, test_cfg would be used.
             rescale (bool): If True, return boxes in original image space.
@@ -428,7 +325,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                   (num_instances, ).
                 - bboxes (Tensor): Has a shape (num_instances, 4),
                   the last dimension 4 arrange as (x1, y1, x2, y2).
->>>>>>> mmdetection/main
         """
         if score_factor_list[0] is None:
             with_score_factors = False
@@ -453,17 +349,13 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                               score_factor_list, mlvl_priors)):
             # 确保分类分支与回归分支的尺寸一致
             assert cls_score.size()[-2:] == bbox_pred.size()[-2:]
-<<<<<<< HEAD
+
             # (na*4,h,w) -> (h,w,na*4) -> (h*w*na,4)
             # 注意,这里三处的permute->reshape的操作本质都一样
             # 都是将单层特征图上的所有"box属性"都铺平,最后一个维度全是box的属性
             # bbox_pred:修正系数,score_factor:目标置信度,cls_score:分类置信度
-            bbox_pred = bbox_pred.permute(1, 2, 0).reshape(-1, 4)
-=======
-
             dim = self.bbox_coder.encode_size
             bbox_pred = bbox_pred.permute(1, 2, 0).reshape(-1, dim)
->>>>>>> mmdetection/main
             if with_score_factors:
                 score_factor = score_factor.permute(1, 2,
                                                     0).reshape(-1).sigmoid()
@@ -477,19 +369,11 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                 # 详情参考class AnchorHead 构造方法中
                 scores = cls_score.softmax(-1)[:, :-1]
 
-<<<<<<< HEAD
             # 在 https://github.com/open-mmlab/mmdetection/pull/6268/ 这之后
             # 此操作在相同的 `nms_pre` 下保留更少的 box.大多数模型的性能没有差异.
             # 如果你发现性能略有下降, 你可以设置比以前更大的 `nms_pre`.
-=======
-            # After https://github.com/open-mmlab/mmdetection/pull/6268/,
-            # this operation keeps fewer bboxes under the same `nms_pre`.
-            # There is no difference in performance for most models. If you
-            # find a slight drop in performance, you can set a larger
-            # `nms_pre` than before.
             score_thr = cfg.get('score_thr', 0)
 
->>>>>>> mmdetection/main
             results = filter_scores_and_topk(
                 scores, score_thr, nms_pre,
                 dict(bbox_pred=bbox_pred, priors=priors))
@@ -498,7 +382,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
 
             bbox_pred = filtered_results['bbox_pred']
             priors = filtered_results['priors']
-
 
             if with_score_factors:
                 score_factor = score_factor[keep_idxs]
@@ -530,59 +413,16 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
             img_meta=img_meta)
 
     def _bbox_post_process(self,
-<<<<<<< HEAD
-                           mlvl_scores,
-                           mlvl_labels,
-                           mlvl_bboxes,
-                           scale_factor,
-                           cfg,
-                           rescale=False,
-                           with_nms=True,
-                           mlvl_score_factors=None,
-                           **kwargs):
-        """box后处理方法.
-=======
                            results: InstanceData,
                            cfg: ConfigDict,
                            rescale: bool = False,
                            with_nms: bool = True,
                            img_meta: Optional[dict] = None) -> InstanceData:
         """bbox post-processing method.
->>>>>>> mmdetection/main
 
         这些框将被重新缩放到原始图像尺寸下并执行nms操作.通常 `with_nms`为False时用于aug test.
 
         Args:
-<<<<<<< HEAD
-            mlvl_scores (list[Tensor]): 单个图像上所有层级的box score
-                [[num_bboxes, nc], ] * num_level
-            mlvl_labels (list[Tensor]): 单个图像上所有层级的box label
-                [[num_bboxes, ], ] * num_level
-            mlvl_bboxes (list[Tensor]): 单个图像上所有层级的box
-                [[num_bboxes, 4], ] * num_level
-            scale_factor (ndarray, optional): 图像在Resize阶段的缩放因子,其格式为
-                (w_scale, h_scale, w_scale, h_scale).
-            cfg (mmcv.Config): 测试 / 后处理 配置,
-                如果为 None, test_cfg 将被使用.
-            rescale (bool): 如果为 True, 则将box*ori_h/new_h以适配原始图像的尺寸.
-            with_nms (bool): 如果为 True, 对box做nms.
-            mlvl_score_factors (list[Tensor], optional): 单个图像上所有层级的obj_score
-                [[num_bboxes, ], ] * num_level.
-
-        Returns:
-            tuple[Tensor]: 检测到的box和label的结果.
-                If with_nms is False:
-                    return mlvl_bboxes, mlvl_scores, mlvl_labels
-                else: 则返回以下格式的数据
-
-                - det_bboxes (Tensor): [num_bboxes, 5]
-                - det_labels (Tensor): [num_bboxes,]
-
-        """
-        assert len(mlvl_scores) == len(mlvl_bboxes) == len(mlvl_labels)
-        # 将单张图像上不同层级之间的 box/score/labels 合并到一起
-        mlvl_bboxes = torch.cat(mlvl_bboxes)
-=======
             results (:obj:`InstaceData`): Detection instance results,
                 each item has shape (num_bboxes, ).
             cfg (ConfigDict): Test / postprocessing configuration,
@@ -605,7 +445,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                 - bboxes (Tensor): Has a shape (num_instances, 4),
                   the last dimension 4 arrange as (x1, y1, x2, y2).
         """
->>>>>>> mmdetection/main
         if rescale:
             assert img_meta.get('scale_factor') is not None
             scale_factor = [1 / s for s in img_meta['scale_factor']]
@@ -634,61 +473,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
             results.scores = det_bboxes[:, -1]
             results = results[:cfg.max_per_img]
 
-<<<<<<< HEAD
-    def forward_train(self,
-                      x,
-                      img_metas,
-                      gt_bboxes,
-                      gt_labels=None,
-                      gt_bboxes_ignore=None,
-                      proposal_cfg=None,
-                      **kwargs):
-        """
-        Args:
-            x (list[Tensor]): 多层级特征图[[bs, c, h, w],]*num_level.
-            img_metas (list[dict]): 图像信息字典列表,其中每个字典具有:'img_shape'、
-                'scale_factor'、'flip',还可能包含 'filename'、'ori_shape'、
-                'pad_shape'和'img_norm_cfg'. img_metas长度为bs
-                有关这些键值的详细信息, 请参见
-                `mmdet/datasets/pipelines/formatting.py:Collect`.
-            gt_bboxes (Tensor): [[num_gts, 4],] * bs
-            gt_labels (Tensor): [[num_gts,],] * bs
-            gt_bboxes_ignore (Tensor): 计算损失时可以忽略的指定gt box.
-                shape为(num_ignored_gts, 4).
-            proposal_cfg (mmcv.Config): 测试/后处理配置,
-                为None时, 将使用test_cfg
-
-        Returns:
-            tuple:
-                losses: (dict[str, Tensor]): A dictionary of loss components.
-                proposal_list (list[Tensor]): Proposals of each image.
-        """
-        outs = self(x)
-        if gt_labels is None:
-            loss_inputs = outs + (gt_bboxes, img_metas)
-        else:
-            loss_inputs = outs + (gt_bboxes, gt_labels, img_metas)
-        losses = self.loss(*loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
-        if proposal_cfg is None:
-            return losses
-        else:
-            proposal_list = self.get_bboxes(
-                *outs, img_metas=img_metas, cfg=proposal_cfg)
-            return losses, proposal_list
-
-    def simple_test(self, feats, img_metas, rescale=False):
-        """没有TTA的测试方法,len(TTA)=1.
-
-        Args:
-            feats (tuple[torch.Tensor]): [[bs, c, h, w],] * num_level.
-            img_metas (list[dict]): batch张图像信息.
-            rescale (bool, optional): 是否缩放box.
-
-        Returns:
-            list[tuple[Tensor, Tensor]]: [[det_box, det_label], ] * bs.
-                det_box: [n, 5],其中 5 代表 (x1, y1, x2, y2, score).
-                det_label: det_box对应的label, [n,].
-=======
         return results
 
     def aug_test(self,
@@ -725,7 +509,6 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
                   (num_instances,).
                 - bboxes (Tensor): Has a shape (num_instances, 4),
                   the last dimension 4 arrange as (x1, y1, x2, y2).
->>>>>>> mmdetection/main
         """
         # TODO: remove this for detr and deformdetr
         sig_of_get_results = signature(self.get_results)

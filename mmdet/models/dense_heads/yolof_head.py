@@ -23,9 +23,9 @@ class YOLOFHead(AnchorHead):
 
     Args:
         num_classes (int): 检测类别数量
-        in_channels (list[int]): 每个scale的输入通道数量.
-        cls_num_convs (int): cls分支的卷积数量.默认为2.
-        reg_num_convs (int): reg分支的卷积数量.默认为4.
+        in_channels (list[int]): 各层级特征图的输入通道数量.
+        cls_num_convs (int): cls分支的卷积数量.
+        reg_num_convs (int): reg分支的卷积数量.
         norm_cfg (:obj:`ConfigDict` or dict): 构造和配置norm层的字典.
     """
 

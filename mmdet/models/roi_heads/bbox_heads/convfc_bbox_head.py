@@ -119,19 +119,11 @@ class ConvFCBBoxHead(BBoxHead):
             ]
 
     def _add_conv_fc_branch(self,
-<<<<<<< HEAD
-                            num_branch_convs,
-                            num_branch_fcs,
-                            in_channels,
-                            is_shared=False):
-        """添加共享或可分离分支.
-=======
                             num_branch_convs: int,
                             num_branch_fcs: int,
                             in_channels: int,
                             is_shared: bool = False) -> tuple:
-        """Add shared or separable branch.
->>>>>>> mmdetection/main
+        """添加共享或可分离分支.
 
         convs -> avg pool (optional) -> fcs
         """
@@ -226,7 +218,6 @@ class ConvFCBBoxHead(BBoxHead):
 
 @MODELS.register_module()
 class Shared2FCBBoxHead(ConvFCBBoxHead):
-<<<<<<< HEAD
     """以faster_rcnn_r50_fpn.py中的box_head为例
     Shared2FCBBoxHead(
       (loss_cls): CrossEntropyLoss(avg_non_ignore=False)
@@ -245,13 +236,8 @@ class Shared2FCBBoxHead(ConvFCBBoxHead):
       (relu): ReLU(inplace=True)
     )
     """
-    def __init__(self, fc_out_channels=1024, *args, **kwargs):
-        super(Shared2FCBBoxHead, self).__init__(
-=======
-
     def __init__(self, fc_out_channels: int = 1024, *args, **kwargs) -> None:
         super().__init__(
->>>>>>> mmdetection/main
             num_shared_convs=0,
             num_shared_fcs=2,
             num_cls_convs=0,

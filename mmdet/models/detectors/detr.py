@@ -16,18 +16,7 @@ from .base_detr import DetectionTransformer
 class DETR(DetectionTransformer):
     r"""Implementation of `DETR: End-to-End Object Detection with Transformers.
 
-<<<<<<< HEAD
-    def __init__(self,
-                 backbone,
-                 bbox_head,
-                 train_cfg=None,
-                 test_cfg=None,
-                 init_cfg=None):
-        super(DETR, self).__init__(backbone, None, bbox_head, train_cfg,
-                                   test_cfg, init_cfg)
-=======
     <https://arxiv.org/pdf/2005.12872>`_.
->>>>>>> mmdetection/main
 
     Code is modified from the `official github repo
     <https://github.com/facebookresearch/detr>`_.

@@ -13,32 +13,18 @@ class ResLayer(Sequential):
     """ResLayer to build ResNet style backbone.
 
     Args:
-<<<<<<< HEAD:mmdet/models/utils/res_layer.py
         block (nn.Module): 用于构建 ResLayer 的block.
         inplanes (int): block的输入维度.
         planes (int): block的隐藏维度.
         num_blocks (int): block重复的次数.
         stride (int): 第一个block的下采样倍数.
         avg_down (bool): 在shortcut路径上,用AvgPool来代替stride=2的卷积做下采样
-        conv_cfg (dict): 构造和配置conv层的字典.
-        norm_cfg (dict): 构造和配置norm层的字典.
-        downsample_first (bool): 为True时在第一个block下采样,否则最后一个block.
-            在ResNet中为True. 在Hourglass网络中为False.
-=======
-        block (nn.Module): block used to build ResLayer.
-        inplanes (int): inplanes of block.
-        planes (int): planes of block.
-        num_blocks (int): number of blocks.
-        stride (int): stride of the first block. Defaults to 1
-        avg_down (bool): Use AvgPool instead of stride conv when
-            downsampling in the bottleneck. Defaults to False
         conv_cfg (dict): dictionary to construct and config conv layer.
             Defaults to None
         norm_cfg (dict): dictionary to construct and config norm layer.
             Defaults to dict(type='BN')
-        downsample_first (bool): Downsample at the first block or last block.
-            False for Hourglass, True for ResNet. Defaults to True
->>>>>>> mmdetection/main:mmdet/models/layers/res_layer.py
+        downsample_first (bool): 为True时在第一个block下采样,否则最后一个block.
+            在ResNet中为True. 在Hourglass网络中为False.
     """
 
     def __init__(self,

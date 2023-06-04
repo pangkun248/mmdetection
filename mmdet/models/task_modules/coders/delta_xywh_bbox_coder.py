@@ -43,28 +43,16 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
         self.add_ctr_clamp = add_ctr_clamp
         self.ctr_clamp = ctr_clamp
 
-<<<<<<< HEAD:mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
-    def encode(self, bboxes, gt_bboxes):
+    def encode(self, bboxes: Union[Tensor, BaseBoxes],
+               gt_bboxes: Union[Tensor, BaseBoxes]) -> Tensor:
         """计算box修正到gt box的修正系数.但计算得到后需要再次进行归一化,
         进行该操作是由于回归的loss通常要比分类loss小的多.为了提高多任务学习的有效性,
         也即平衡多个loss.需要对回归值进行归一化,这普遍应用于rcnn系列网络.
         参见于Cascade R-CNN论文3.1节内容.
 
         Args:
-            bboxes (torch.Tensor): 初始box.
-            gt_bboxes (torch.Tensor): gt box.
-=======
-    def encode(self, bboxes: Union[Tensor, BaseBoxes],
-               gt_bboxes: Union[Tensor, BaseBoxes]) -> Tensor:
-        """Get box regression transformation deltas that can be used to
-        transform the ``bboxes`` into the ``gt_bboxes``.
-
-        Args:
-            bboxes (torch.Tensor or :obj:`BaseBoxes`): Source boxes,
-                e.g., object proposals.
-            gt_bboxes (torch.Tensor or :obj:`BaseBoxes`): Target of the
-                transformation, e.g., ground-truth boxes.
->>>>>>> mmdetection/main:mmdet/models/task_modules/coders/delta_xywh_bbox_coder.py
+            bboxes (torch.Tensor or :obj:`BaseBoxes`): prior box.
+            gt_bboxes (torch.Tensor or :obj:`BaseBoxes`): target box.
 
         Returns:
             torch.Tensor: 修正系数
@@ -76,19 +64,6 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
         encoded_bboxes = bbox2delta(bboxes, gt_bboxes, self.means, self.stds)
         return encoded_bboxes
 
-<<<<<<< HEAD:mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
-    def decode(self,
-               bboxes,
-               pred_bboxes,
-               max_shape=None,
-               wh_ratio_clip=16 / 1000):
-        """在box上应用修正系数以得到修正后的box.
-
-        Args:
-            bboxes (torch.Tensor): 初始box. [bs, N, 4] or [N, 4], N = na * H * W.
-            pred_bboxes (Tensor): box的修正系数.
-               [bs, N, nc * 4] or [bs, N, 4] or [N, nc * 4] or [N, 4].
-=======
     def decode(
         self,
         bboxes: Union[Tensor, BaseBoxes],
@@ -97,16 +72,12 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
                                   Sequence[Sequence[int]]]] = None,
         wh_ratio_clip: Optional[float] = 16 / 1000
     ) -> Union[Tensor, BaseBoxes]:
-        """Apply transformation `pred_bboxes` to `boxes`.
+        """在box上应用修正系数以得到修正后的box.记N = na * h * w
 
         Args:
-            bboxes (torch.Tensor or :obj:`BaseBoxes`): Basic boxes. Shape
-                (B, N, 4) or (N, 4)
-            pred_bboxes (Tensor): Encoded offsets with respect to each roi.
-               Has shape (B, N, num_classes * 4) or (B, N, 4) or
-               (N, num_classes * 4) or (N, 4). Note N = num_anchors * W * H
-               when rois is a grid of anchors.Offset encoding follows [1]_.
->>>>>>> mmdetection/main:mmdet/models/task_modules/coders/delta_xywh_bbox_coder.py
+            bboxes (torch.Tensor or :obj:`BaseBoxes`): [bs, N, 4] or [N, 4].
+            pred_bboxes (Tensor): box的修正系数.
+               [bs, N, nc * 4] or [bs, N, 4] or [N, nc * 4] or [N, 4].
             max_shape (Sequence[int] or torch.Tensor or Sequence[
                Sequence[int]],optional): box的最大边界, shape可能为
                [H, W, C] or [H, W]. 如果box的shape为 [bs, N, 4], 那么max_shape就应该是
@@ -114,11 +85,7 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
             wh_ratio_clip (float, optional): 允许的宽高比.
 
         Returns:
-<<<<<<< HEAD:mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
-            torch.Tensor: 修正后的box.
-=======
-            Union[torch.Tensor, :obj:`BaseBoxes`]: Decoded boxes.
->>>>>>> mmdetection/main:mmdet/models/task_modules/coders/delta_xywh_bbox_coder.py
+            Union[torch.Tensor, :obj:`BaseBoxes`]: 修正后的box.
         """
         bboxes = get_box_tensor(bboxes)
         assert pred_bboxes.size(0) == bboxes.size(0)
@@ -153,19 +120,13 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
         return decoded_bboxes
 
 
-<<<<<<< HEAD:mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
-@mmcv.jit(coderize=True)
-def bbox2delta(proposals, gt, means=(0., 0., 0., 0.), stds=(1., 1., 1., 1.)):
-    """计算基础box与目标box之间的修正系数.
-=======
 def bbox2delta(
     proposals: Tensor,
     gt: Tensor,
     means: Sequence[float] = (0., 0., 0., 0.),
     stds: Sequence[float] = (1., 1., 1., 1.)
 ) -> Tensor:
-    """Compute deltas of proposals w.r.t. gt.
->>>>>>> mmdetection/main:mmdet/models/task_modules/coders/delta_xywh_bbox_coder.py
+    """计算基础box与目标box之间的修正系数.
 
     通常来说是计算x, y, w, h四个维度的修正系数
 
@@ -205,19 +166,6 @@ def bbox2delta(
     return deltas
 
 
-<<<<<<< HEAD:mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
-@mmcv.jit(coderize=True)
-def delta2bbox(rois,
-               deltas,
-               means=(0., 0., 0., 0.),
-               stds=(1., 1., 1., 1.),
-               max_shape=None,
-               wh_ratio_clip=16 / 1000,
-               clip_border=True,
-               add_ctr_clamp=False,
-               ctr_clamp=32):
-    """利用修正系数修正基础box.基础box可能是anchor也可能是roi
-=======
 def delta2bbox(rois: Tensor,
                deltas: Tensor,
                means: Sequence[float] = (0., 0., 0., 0.),
@@ -228,12 +176,11 @@ def delta2bbox(rois: Tensor,
                clip_border: bool = True,
                add_ctr_clamp: bool = False,
                ctr_clamp: int = 32) -> Tensor:
-    """Apply deltas to shift/scale base boxes.
+    """利用修正系数修正基础box.基础box可能是anchor也可能是roi
 
     Typically the rois are anchor or proposed bounding boxes and the deltas are
     network outputs used to shift/scale those boxes.
     This is the inverse function of :func:`bbox2delta`.
->>>>>>> mmdetection/main:mmdet/models/task_modules/coders/delta_xywh_bbox_coder.py
 
     Args:
         rois (Tensor): 基础box. [N, 4].

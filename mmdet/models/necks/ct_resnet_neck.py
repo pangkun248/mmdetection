@@ -17,21 +17,12 @@ class CTResNetNeck(BaseModule):
     object classification and box regression.
     大概流程是,conv+up_conv -> conv+up_conv -> conv+up_conv
     Args:
-<<<<<<< HEAD
-         in_channel (int): 输入维度.
+         in_channels (int): 输入维度.
          num_deconv_filters (tuple[int]): 每个stage卷积核的输出维度.
          num_deconv_kernels (tuple[int]): 每个stage卷积核大小.
          use_dcn (bool): 是否应用DCNv2.
-         init_cfg (dict or list[dict], optional): 初始化配置字典.
-=======
-         in_channels (int): Number of input channels.
-         num_deconv_filters (tuple[int]): Number of filters per stage.
-         num_deconv_kernels (tuple[int]): Number of kernels per stage.
-         use_dcn (bool): If True, use DCNv2. Defaults to True.
          init_cfg (:obj:`ConfigDict` or dict or list[dict] or
-             list[:obj:`ConfigDict`], optional): Initialization
-             config dict.
->>>>>>> mmdetection/main
+             list[:obj:`ConfigDict`], optional): 初始化配置字典.
     """
 
     def __init__(self,
@@ -48,15 +39,10 @@ class CTResNetNeck(BaseModule):
         self.deconv_layers = self._make_deconv_layer(num_deconv_filters,
                                                      num_deconv_kernels)
 
-<<<<<<< HEAD
-    def _make_deconv_layer(self, num_deconv_filters, num_deconv_kernels):
-        """使用反卷积对backbone的输出进行上采样."""
-=======
     def _make_deconv_layer(
             self, num_deconv_filters: Tuple[int, ...],
             num_deconv_kernels: Tuple[int, ...]) -> nn.Sequential:
-        """use deconv layers to upsample backbone's output."""
->>>>>>> mmdetection/main
+        """使用反卷积对backbone的输出进行上采样."""
         layers = []
         for i in range(len(num_deconv_filters)):
             feat_channels = num_deconv_filters[i]

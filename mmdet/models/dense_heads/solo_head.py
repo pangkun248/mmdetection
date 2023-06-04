@@ -27,16 +27,14 @@ class SOLOHead(BaseMaskHead):
     Args:
         num_classes (int): 识别类别数.
         in_channels (int): 输入特征维度.
-        feat_channels (int): 隐藏层维度. 用于子类. 默认: 256.
-        stacked_convs (int): head部分公共区域卷积数量. 默认: 4.
+        feat_channels (int): 隐藏层维度. 用于子类.
+        stacked_convs (int): head部分公共区域卷积数量.
         strides (tuple): 各个特征图的下采样倍数.
         scale_ranges (tuple[tuple[int, int]]): 多层级mask的面积范围,((min1, max1), ) * nl.
-        pos_scale (float): Constant scale factor to control the center region.
-        num_grids (list[int]): Divided image into a uniform grids, each
-            feature map has a different grid value. The number of output
-            channels is grid ** 2. Defaults to [40, 36, 24, 16, 12].
+        pos_scale (float): 用于控制gt中心正样本区域的恒定比例因子.
+        num_grids (list[int]): 将图像划分为grid*grid的网格. 每个网格代表不同的位置预测不同的结果.
         cls_down_index (int): 在stacked_convs中cls_down_index位置处的卷积操作之前
-            将cls_feat进行下采样至num_grid[i]. 默认: 0.
+            将cls_feat进行下采样至num_grid[i].
         loss_mask (dict): Config of mask loss.
         loss_cls (dict): Config of classification loss.
         norm_cfg (dict): Dictionary to construct and config norm layer.

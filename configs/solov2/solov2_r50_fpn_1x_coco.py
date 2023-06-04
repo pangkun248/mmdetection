@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/beach_max_instance.py',
+    '../_base_/datasets/coco_instance.py',
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
 
@@ -29,7 +29,7 @@ model = dict(
         num_outs=5),
     mask_head=dict(
         type='SOLOV2Head',
-        num_classes=1,
+        num_classes=80,
         in_channels=256,
         feat_channels=512,
         stacked_convs=4,

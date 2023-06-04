@@ -24,16 +24,6 @@ class ATSS(SingleStageDetector):
     """
 
     def __init__(self,
-<<<<<<< HEAD
-                 backbone,
-                 neck,
-                 bbox_head,
-                 train_cfg=None,
-                 test_cfg=None,
-                 init_cfg=None):
-        super(ATSS, self).__init__(backbone, neck, bbox_head, train_cfg,
-                                   test_cfg, init_cfg)
-=======
                  backbone: ConfigType,
                  neck: ConfigType,
                  bbox_head: ConfigType,
@@ -49,4 +39,3 @@ class ATSS(SingleStageDetector):
             test_cfg=test_cfg,
             data_preprocessor=data_preprocessor,
             init_cfg=init_cfg)
->>>>>>> mmdetection/main

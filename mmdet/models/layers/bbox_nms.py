@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Optional, Tuple, Union
+
 import torch
 from mmcv.ops.nms import batched_nms
 from torch import Tensor

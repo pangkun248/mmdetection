@@ -101,7 +101,7 @@ class AnchorHead(BaseDenseHead):
         self.num_base_priors = self.prior_generator.num_base_priors[0]
         self._init_layers()
 
-    def _init_layers(self):
+    def _init_layers(self) -> None:
         """Initialize layers of the head."""
         self.conv_cls = nn.Conv2d(self.in_channels,
                                   self.num_base_priors * self.cls_out_channels,
@@ -175,6 +175,7 @@ class AnchorHead(BaseDenseHead):
             featmap_sizes, device=device)
         anchor_list = [multi_level_anchors for _ in range(num_imgs)]
 
+        # 对于每个图像, 计算不同层级上prior的valid flag
         valid_flag_list = []
         for img_id, img_meta in enumerate(batch_img_metas):
             multi_level_flags = self.prior_generator.valid_flags(

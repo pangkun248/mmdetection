@@ -11,9 +11,10 @@ from .base import BaseDetector
 
 @MODELS.register_module()
 class SingleStageDetector(BaseDetector):
-    """one-stage检测器的基类.
+    """Base class for single-stage detectors.
 
-    one-stage检测器直接且密集地在backbone+neck的输出特征图上预测box.
+    Single-stage detectors directly and densely predict bounding boxes on the
+    output features of the backbone+neck.
     """
 
     def __init__(self,

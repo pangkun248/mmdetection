@@ -24,28 +24,17 @@ class DistancePointBBoxCoder(BaseBBoxCoder):
         super().__init__(**kwargs)
         self.clip_border = clip_border
 
-<<<<<<< HEAD:mmdet/core/bbox/coder/distance_point_bbox_coder.py
-    def encode(self, points, gt_bboxes, max_dis=None, eps=0.1):
-        """将[x1, y1, x2, y2] -> [top, bottom, left, right].
-
-        Args:
-            points (Tensor): Shape [N, 2], The format is [x, y].
-            gt_bboxes (Tensor): Shape [N, 4], 格式为[x1, y1, x2, y2]
-            max_dis (float): 距离上限. Default None.
-=======
     def encode(self,
                points: Tensor,
                gt_bboxes: Union[Tensor, BaseBoxes],
                max_dis: Optional[float] = None,
                eps: float = 0.1) -> Tensor:
-        """Encode bounding box to distances.
+        """将[x1, y1, x2, y2] -> [top, bottom, left, right].
 
         Args:
-            points (Tensor): Shape (N, 2), The format is [x, y].
-            gt_bboxes (Tensor or :obj:`BaseBoxes`): Shape (N, 4), The format
-                is "xyxy"
-            max_dis (float): Upper bound of the distance. Default None.
->>>>>>> mmdetection/main:mmdet/models/task_modules/coders/distance_point_bbox_coder.py
+            points (Tensor): [N, 2].
+            gt_bboxes (Tensor or :obj:`BaseBoxes`): [N, 4], 格式为xyxy
+            max_dis (float): 距离上限.
             eps (float): a small value to ensure target < max_dis, instead <=.
                 Default 0.1.
 
@@ -58,10 +47,6 @@ class DistancePointBBoxCoder(BaseBBoxCoder):
         assert gt_bboxes.size(-1) == 4
         return bbox2distance(points, gt_bboxes, max_dis, eps)
 
-<<<<<<< HEAD:mmdet/core/bbox/coder/distance_point_bbox_coder.py
-    def decode(self, points, pred_bboxes, max_shape=None):
-        """将预测的四个方向距离[left, top, right, bottom]转换成[x1, y1, x2, y2].
-=======
     def decode(
         self,
         points: Tensor,
@@ -69,8 +54,7 @@ class DistancePointBBoxCoder(BaseBBoxCoder):
         max_shape: Optional[Union[Sequence[int], Tensor,
                                   Sequence[Sequence[int]]]] = None
     ) -> Union[Tensor, BaseBoxes]:
-        """Decode distance prediction to bounding box.
->>>>>>> mmdetection/main:mmdet/models/task_modules/coders/distance_point_bbox_coder.py
+        """将预测的四个方向距离[left, top, right, bottom]转换成[x1, y1, x2, y2].
 
         Args:
             points (Tensor): Shape [B, N, 2] or [N, 2].
