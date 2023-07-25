@@ -446,7 +446,7 @@ class MaskFormerHead(AnchorFreeHead):
         mask_preds = mask_preds.reshape(-1, 1)
         # shape (num_total_gts, h, w) -> (num_total_gts * h * w)
         mask_targets = mask_targets.reshape(-1)
-        # target is (1 - mask_targets) !!!
+        # target为(1 - mask_targets)的原因是这是二分类,而二分类中0是前景,1是背景
         loss_mask = self.loss_mask(
             mask_preds, 1 - mask_targets, avg_factor=num_total_masks * h * w)
 
