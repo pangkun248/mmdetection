@@ -188,23 +188,11 @@ class FocalLoss(nn.Module):
         """Forward function.
 
         Args:
-<<<<<<< HEAD
             pred (torch.Tensor): 输入.
-            target (torch.Tensor): 输入要拟合的目标.
-            weight (torch.Tensor, optional): 输入的权重.shape与输入一致
-            avg_factor (int, optional): 用于平均损失的平均因子.一般为正样本或正负样本总数
+            target (torch.Tensor): 拟合的目标.[N, ] 或是经过one-hot生成的[N, C].
+            weight (torch.Tensor, optional): 输入的权重.shape与输入一致.
+            avg_factor (int, optional): 用于平均损失的平均因子.一般为正样本或正负样本总数.
             reduction_override (str, optional): 用于覆盖初始化方法中的self.reduction.
-                可选 "none", "mean" and "sum".
-=======
-            pred (torch.Tensor): 输入.
-            target (torch.Tensor): 输入要拟合的目标.[N, ] 或是经过one-hot生成的[N, C].
-            weight (torch.Tensor, optional): The weight of loss for each
-                prediction. Defaults to None.
-            avg_factor (int, optional): Average factor that is used to average
-                the loss. Defaults to None.
-            reduction_override (str, optional): The reduction method used to
-                override the original reduction method of the loss.
-                Options are "none", "mean" and "sum".
 
         Returns:
             torch.Tensor: 计算的损失
