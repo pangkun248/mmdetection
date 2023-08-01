@@ -433,7 +433,7 @@ class Mask2FormerHead(MaskFormerHead):
         cls_pred_list.append(cls_pred)
         mask_pred_list.append(mask_pred)
 
-        # 此处的循环是为了处理小物体分割分割问题,是一种有效的多尺度策略来利用高分辨率的特征
+        # 此处的循环是为了处理小物体分割问题,是一种有效的多尺度策略来利用高分辨率的特征
         # 它从pixel decoder的特征金字塔输入的query与最大特征尺寸特征"结合"
         # 再经过一个cls/reg_fc层输出该层query在最大特征尺寸上的预测结果,参见论文3.2
         for i in range(self.num_transformer_decoder_layers):
