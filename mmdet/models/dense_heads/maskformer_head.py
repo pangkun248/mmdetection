@@ -387,21 +387,20 @@ class MaskFormerHead(AnchorFreeHead):
         num_imgs = cls_scores.size(0)
         cls_scores_list = [cls_scores[i] for i in range(num_imgs)]
         mask_preds_list = [mask_preds[i] for i in range(num_imgs)]
-
         (labels_list, label_weights_list, mask_targets_list, mask_weights_list,
          avg_factor) = self.get_targets(cls_scores_list, mask_preds_list,
                                         batch_gt_instances, batch_img_metas)
-        # shape (batch_size, num_queries)
+        # [bs, num_query]
         labels = torch.stack(labels_list, dim=0)
-        # shape (batch_size, num_queries)
+        # [bs, num_query]
         label_weights = torch.stack(label_weights_list, dim=0)
-        # shape (num_total_gts, h, w)
+        # [batch_num_gt, batch_h, batch_w]
         mask_targets = torch.cat(mask_targets_list, dim=0)
-        # shape (batch_size, num_queries)
+        # [bs, num_query]
         mask_weights = torch.stack(mask_weights_list, dim=0)
 
-        # classfication loss
-        # shape (batch_size * num_queries, )
+        # cls loss
+        # [bs * num_query, ]
         cls_scores = cls_scores.flatten(0, 1)
         labels = labels.flatten(0, 1)
         label_weights = label_weights.flatten(0, 1)
@@ -417,7 +416,7 @@ class MaskFormerHead(AnchorFreeHead):
         num_total_masks = max(num_total_masks, 1)
 
         # extract positive ones
-        # shape (batch_size, num_queries, h, w) -> (num_total_gts, h, w)
+        # [bs, num_query, max_h, max_w] -> [batch_num_gt, max_h, max_w]
         mask_preds = mask_preds[mask_weights > 0]
         target_shape = mask_targets.shape[-2:]
 
@@ -428,7 +427,7 @@ class MaskFormerHead(AnchorFreeHead):
             return loss_cls, loss_mask, loss_dice
 
         # upsample to shape of target
-        # shape (num_total_gts, h, w)
+        # [batch_num_gt, batch_h, batch_w]
         mask_preds = F.interpolate(
             mask_preds.unsqueeze(1),
             target_shape,
@@ -440,11 +439,11 @@ class MaskFormerHead(AnchorFreeHead):
             mask_preds, mask_targets, avg_factor=num_total_masks)
 
         # mask loss
-        # FocalLoss support input of shape (n, num_class)
+        # FocalLoss support input of shape (n, nc)
         h, w = mask_preds.shape[-2:]
-        # shape (num_total_gts, h, w) -> (num_total_gts * h * w, 1)
+        # [batch_num_gt, max_h, batch_w] -> [batch_num_gt * max_h * batch_w, 1]
         mask_preds = mask_preds.reshape(-1, 1)
-        # shape (num_total_gts, h, w) -> (num_total_gts * h * w)
+        # [batch_num_gt, max_h, batch_w] -> [batch_num_gt * max_h * batch_w]
         mask_targets = mask_targets.reshape(-1)
         # target为(1 - mask_targets)的原因是这是二分类,而二分类中0是前景,1是背景
         loss_mask = self.loss_mask(
@@ -492,17 +491,17 @@ class MaskFormerHead(AnchorFreeHead):
         mask_features, memory = self.pixel_decoder(x, batch_img_metas)
         pos_embed = self.decoder_pe(padding_mask)
         memory = self.decoder_input_proj(memory)
-        # shape (batch_size, c, h, w) -> (batch_size, h*w, c)
+        # [bs, feat_c, min_h, min_w] -> [bs, min_h*min_w, feat_c]
         memory = memory.flatten(2).permute(0, 2, 1)
         pos_embed = pos_embed.flatten(2).permute(0, 2, 1)
-        # shape (batch_size, h * w)
+        # [bs, min_h * min_w]
         padding_mask = padding_mask.flatten(1)
-        # shape = (num_queries, embed_dims)
+        # [num_query, embed_dims]
         query_embed = self.query_embed.weight
-        # shape = (batch_size, num_queries, embed_dims)
+        # [batch_size, num_query, embed_dims]
         query_embed = query_embed.unsqueeze(0).repeat(batch_size, 1, 1)
         target = torch.zeros_like(query_embed)
-        # shape (num_decoder, num_queries, batch_size, embed_dims)
+        # [num_decoder, num_query, bs, embed_dims]
         out_dec = self.transformer_decoder(
             query=target,
             key=memory,
