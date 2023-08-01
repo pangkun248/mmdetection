@@ -205,11 +205,11 @@ class Mask2FormerHead(MaskFormerHead):
 
         point_coords = torch.rand((1, self.num_points, 2),
                                   device=cls_score.device)
-        # shape (num_queries, num_points)
+        # [num_query, num_point], 用随机生成的point代替整个mask的方法来源于PointRend
         mask_points_pred = point_sample(
             mask_pred.unsqueeze(1), point_coords.repeat(num_queries, 1,
                                                         1)).squeeze(1)
-        # shape (num_gts, num_points)
+        # [num_gt, num_point]
         gt_points_masks = point_sample(
             gt_masks.unsqueeze(1).float(), point_coords.repeat(num_gts, 1,
                                                                1)).squeeze(1)
@@ -252,12 +252,10 @@ class Mask2FormerHead(MaskFormerHead):
         """Loss function for outputs from a single decoder layer.
 
         Args:
-            cls_scores (Tensor): Mask score logits from a single decoder layer
-                for all images. Shape (batch_size, num_queries,
-                cls_out_channels). Note `cls_out_channels` should includes
-                background.
-            mask_preds (Tensor): Mask logits for a pixel decoder for all
-                images. Shape (batch_size, num_queries, h, w).
+            cls_scores (Tensor): 单个decode layer输出的cls score
+                [bs, num_query, nc+1].
+            mask_preds (Tensor): 单个decode layer输出的mask score
+                [bs, num_query, max_h, max_w]. max_h/w为最大特征尺度.
             batch_gt_instances (list[obj:`InstanceData`]): each contains
                 ``labels`` and ``masks``.
             batch_img_metas (list[dict]): List of image meta information.
@@ -272,17 +270,17 @@ class Mask2FormerHead(MaskFormerHead):
         (labels_list, label_weights_list, mask_targets_list, mask_weights_list,
          avg_factor) = self.get_targets(cls_scores_list, mask_preds_list,
                                         batch_gt_instances, batch_img_metas)
-        # shape (batch_size, num_queries)
+        # [bs, num_query]
         labels = torch.stack(labels_list, dim=0)
-        # shape (batch_size, num_queries)
+        # [bs, num_query]
         label_weights = torch.stack(label_weights_list, dim=0)
-        # shape (num_total_gts, h, w)
+        # [batch_num_gt, h, w]
         mask_targets = torch.cat(mask_targets_list, dim=0)
-        # shape (batch_size, num_queries)
+        # [bs, num_query]
         mask_weights = torch.stack(mask_weights_list, dim=0)
 
-        # classfication loss
-        # shape (batch_size * num_queries, )
+        # cls loss
+        # [bs * num_query, ]
         cls_scores = cls_scores.flatten(0, 1)
         labels = labels.flatten(0, 1)
         label_weights = label_weights.flatten(0, 1)
@@ -298,7 +296,7 @@ class Mask2FormerHead(MaskFormerHead):
         num_total_masks = max(num_total_masks, 1)
 
         # extract positive ones
-        # shape (batch_size, num_queries, h, w) -> (num_total_gts, h, w)
+        # [bs, num_query, max_h, max_w] -> [batch_num_gt, max_h, max_w]
         mask_preds = mask_preds[mask_weights > 0]
 
         if mask_targets.shape[0] == 0:
@@ -311,10 +309,12 @@ class Mask2FormerHead(MaskFormerHead):
             points_coords = get_uncertain_point_coords_with_randomness(
                 mask_preds.unsqueeze(1), None, self.num_points,
                 self.oversample_ratio, self.importance_sample_ratio)
-            # shape (num_total_gts, h, w) -> (num_total_gts, num_points)
+            # 从target_mask[batch_num_gt, batch_h, batch_w]中进行采样
+            # 得[batch_num_gt, num_points]代替target_mask参与loss计算
             mask_point_targets = point_sample(
                 mask_targets.unsqueeze(1).float(), points_coords).squeeze(1)
-        # shape (num_queries, h, w) -> (num_queries, num_points)
+        # 从pred_mask[num_query, max_h, max_w]中进行采样
+        # 得[num_query, num_points]代替pred_mask参与loss计算
         mask_point_preds = point_sample(
             mask_preds.unsqueeze(1), points_coords).squeeze(1)
 
@@ -323,9 +323,9 @@ class Mask2FormerHead(MaskFormerHead):
             mask_point_preds, mask_point_targets, avg_factor=num_total_masks)
 
         # mask loss
-        # shape (num_queries, num_points) -> (num_queries * num_points, )
+        # [num_query, num_points] -> [num_query * num_points, ]
         mask_point_preds = mask_point_preds.reshape(-1)
-        # shape (num_total_gts, num_points) -> (num_total_gts * num_points, )
+        # [num_total_gts, num_points] -> [num_total_gts * num_points, ]
         mask_point_targets = mask_point_targets.reshape(-1)
         loss_mask = self.loss_mask(
             mask_point_preds,
@@ -356,21 +356,22 @@ class Mask2FormerHead(MaskFormerHead):
                     (batch_size * num_heads, num_queries, h, w).
         """
         decoder_out = self.transformer_decoder.post_norm(decoder_out)
-        # shape (num_queries, batch_size, c)
+        # [num_query, bs, nc+1]
         cls_pred = self.cls_embed(decoder_out)
-        # shape (num_queries, batch_size, c)
+        # [num_query, bs, out_c]
         mask_embed = self.mask_embed(decoder_out)
-        # shape (num_queries, batch_size, h, w)
+        # [num_query, bs, max_h, max_w]
         mask_pred = torch.einsum('bqc,bchw->bqhw', mask_embed, mask_feature)
         attn_mask = F.interpolate(
             mask_pred,
             attn_mask_target_size,
             mode='bilinear',
             align_corners=False)
-        # shape (num_queries, batch_size, h, w) ->
-        #   (batch_size * num_head, num_queries, h, w)
+        # [num_query, bs, h, w] -> [bs * num_head, num_query, h*w]
         attn_mask = attn_mask.flatten(2).unsqueeze(1).repeat(
             (1, self.num_heads, 1, 1)).flatten(0, 1)
+        # 它通过将cross_attn限制在每个query的预测的mask的前景区域内来提取局部特征,
+        # 而不是关注所有的特征图区域.参考论文3.2
         attn_mask = attn_mask.sigmoid() < 0.5
         attn_mask = attn_mask.detach()
 
@@ -390,29 +391,26 @@ class Mask2FormerHead(MaskFormerHead):
         Returns:
             tuple[list[Tensor]]: A tuple contains two elements.
 
-                - cls_pred_list (list[Tensor)]: Classification logits \
-                    for each decoder layer. Each is a 3D-tensor with shape \
-                    (batch_size, num_queries, cls_out_channels). \
-                    Note `cls_out_channels` should includes background.
-                - mask_pred_list (list[Tensor]): Mask logits for each \
-                    decoder layer. Each with shape (batch_size, num_queries, \
-                    h, w).
+                - cls_pred_list (list[Tensor)]: cls score
+                    [[bs, num_query, nc+1], ] * num_decode_layer.
+                - mask_pred_list (list[Tensor]): mask score
+                    [[bs, num_query, max_h, max_w], ] * num_decode_layer.
         """
         batch_img_metas = [
             data_sample.metainfo for data_sample in batch_data_samples
         ]
         batch_size = len(batch_img_metas)
+        # [bs, out_c, max_h,max_w], [[bs, feat_c, h, w], ] * num_transformer_feat_level
         mask_features, multi_scale_memorys = self.pixel_decoder(x)
         # multi_scale_memorys (from low resolution to high resolution)
         decoder_inputs = []
         decoder_positional_encodings = []
         for i in range(self.num_transformer_feat_level):
             decoder_input = self.decoder_input_projs[i](multi_scale_memorys[i])
-            # shape (batch_size, c, h, w) -> (batch_size, h*w, c)
+            # [bs, feat_c, h, w] -> [bs, h*w, feat_c]
             decoder_input = decoder_input.flatten(2).permute(0, 2, 1)
             level_embed = self.level_embed.weight[i].view(1, 1, -1)
             decoder_input = decoder_input + level_embed
-            # shape (batch_size, c, h, w) -> (batch_size, h*w, c)
             mask = decoder_input.new_zeros(
                 (batch_size, ) + multi_scale_memorys[i].shape[-2:],
                 dtype=torch.bool)
@@ -422,7 +420,7 @@ class Mask2FormerHead(MaskFormerHead):
                 2).permute(0, 2, 1)
             decoder_inputs.append(decoder_input)
             decoder_positional_encodings.append(decoder_positional_encoding)
-        # shape (num_queries, c) -> (batch_size, num_queries, c)
+        # [num_query, feat_c] -> [bs, num_query, feat_c]
         query_feat = self.query_feat.weight.unsqueeze(0).repeat(
             (batch_size, 1, 1))
         query_embed = self.query_embed.weight.unsqueeze(0).repeat(
@@ -435,23 +433,30 @@ class Mask2FormerHead(MaskFormerHead):
         cls_pred_list.append(cls_pred)
         mask_pred_list.append(mask_pred)
 
+        # 此处的循环是为了处理小物体分割分割问题,是一种有效的多尺度策略来利用高分辨率的特征
+        # 它从pixel decoder的特征金字塔输入的query与最大特征尺寸特征"结合"
+        # 再经过一个cls/reg_fc层输出该层query在最大特征尺寸上的预测结果,参见论文3.2
         for i in range(self.num_transformer_decoder_layers):
             level_idx = i % self.num_transformer_feat_level
-            # if a mask is all True(all background), then set it all False.
+            # 防止后续计算softmax(QK.t)时所有值为-inf,从而导致分母为0,输出全为NaN.
+            # 来源:https://github.com/facebookresearch/Mask2Former/issues/77
             attn_mask[torch.where(
                 attn_mask.sum(-1) == attn_mask.shape[-1])] = False
 
             # cross_attn + self_attn
             layer = self.transformer_decoder.layers[i]
             query_feat = layer(
+                # [bs, num_query, feat_c]
                 query=query_feat,
+                # [bs, h*w, feat_c] 在循环(9次)过程中, h*w规律为[h0*w0, h1*w1, h2*w2] * 3, h2 == 2*h1 == 4*h0
                 key=decoder_inputs[level_idx],
                 value=decoder_inputs[level_idx],
                 query_pos=query_embed,
                 key_pos=decoder_positional_encodings[level_idx],
+                # [bs*num_head, num_query, h*w], h*w取值情况同上
                 cross_attn_mask=attn_mask,
                 query_key_padding_mask=None,
-                # here we do not apply masking on padded region
+                # 因为cross_attn与self_attn调换了位置,所以此处的key_padding_mask为None
                 key_padding_mask=None)
             cls_pred, mask_pred, attn_mask = self._forward_head(
                 query_feat, mask_features, multi_scale_memorys[
