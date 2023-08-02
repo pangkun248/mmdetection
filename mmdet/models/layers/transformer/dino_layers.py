@@ -325,9 +325,10 @@ class CdnQueryGenerator(BaseModule):
         chosen_indice = torch.nonzero(p < (self.label_noise_scale * 0.5)).view(
             -1)  # Note `* 0.5`
         new_labels = torch.randint_like(chosen_indice, 0, self.num_classes)
-        noisy_labels_expand = gt_labels_expand.scatter(0, chosen_indice,
-                                                       new_labels)
-        dn_label_query = self.label_embedding(noisy_labels_expand)
+        # noisy_labels_expand = gt_labels_expand.scatter(0, chosen_indice,
+        #                                                new_labels)
+        gt_labels_expand[chosen_indice] = new_labels
+        dn_label_query = self.label_embedding(gt_labels_expand)
         return dn_label_query
 
     def generate_dn_bbox_query(self, gt_bboxes: Tensor,
