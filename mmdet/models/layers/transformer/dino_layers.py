@@ -69,9 +69,16 @@ class DinoTransformerDecoder(DeformableDetrTransformerDecoder):
                 assert reference_points.shape[-1] == 2
                 reference_points_input = \
                     reference_points[:, :, None] * valid_ratios[:, None]
-
+            # 这里与SinePositionalEncoding中生成位置编码的区别仅在于准备的box差异,
+            # 后者是以padding_mask生成的固定坐标点生成的位置编码,
+            # 而此处是根据由类似RPN产生的"优质"box与依据gt_box随机产生的噪音box
+            # 合并得到的box进行生成的位置编码.显然前者提供的box更为良好.
+            # 值得注意的是下面一行中的0,因为前者提供的box在不同层级间相对坐标
+            # 几乎无区别,所以取[0, nl-1)范围内任意值影响都不大.
             query_sine_embed = coordinate_to_encoding(
                 reference_points_input[:, :, 0, :])
+            # 因为SinePositionalEncoding生成的是包含yx的位置编码
+            # 而此处因为生成的是yxwh的编码,为了与query匹配需要将维度减半.
             query_pos = self.ref_point_head(query_sine_embed)
 
             query = layer(
@@ -397,13 +404,12 @@ class CdnQueryGenerator(BaseModule):
         positive_idx = torch.arange(
             len(gt_bboxes), dtype=torch.long, device=device)
         positive_idx = positive_idx.unsqueeze(0).repeat(num_groups, 1)
+        # 此处的2是代表正+负,需要给负样本预先留出位置.
         positive_idx += 2 * len(gt_bboxes) * torch.arange(
             num_groups, dtype=torch.long, device=device)[:, None]
         positive_idx = positive_idx.flatten()
         negative_idx = positive_idx + len(gt_bboxes)
-
-        # determine the sign of each element in the random part of the added
-        # noise to be positive or negative randomly.
+        # 随机生成shape与gt_bboxes_expand一致的+/-1数据
         rand_sign = torch.randint_like(
             gt_bboxes_expand, low=0, high=2,
             dtype=torch.float32) * 2.0 - 1.0  # [low, high), 1 or -1, randomly
@@ -531,6 +537,10 @@ class CdnQueryGenerator(BaseModule):
             num_queries_total), where `num_queries_total` is the sum of
             `num_denoising_queries` and `num_matching_queries`.
         """
+        # 因为此部分构造正负对比是训练阶段额外加入的,和原始query拼接在一起.
+        # 首先原始query不能见到这些根据gt构造的正负对比组,其次,不同对比组之间也两两不可见,
+        # 但他们可以见到原始query.参考:https://zhuanlan.zhihu.com/p/634179999
+        # mask可视化结果可参考: https://blog.csdn.net/athrunsunny/article/details/131013406
         num_denoising_queries = int(max_num_target * 2 * num_groups)
         num_queries_total = num_denoising_queries + self.num_matching_queries
         attn_mask = torch.zeros(
