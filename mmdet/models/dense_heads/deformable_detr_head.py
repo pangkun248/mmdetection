@@ -234,6 +234,11 @@ class DeformableDETRHead(DETRHead):
                                          batch_gt_instances_ignore)
 
         # loss of proposal generated from encode feature map.
+        # 当as_two_stage为True时,会有一个类似RPN一样的结构,那么自然要对这个
+        # rpn输出的结果计算loss.其与head输出的结果在计算loss时本质相同,只是
+        # 前者提供了nl*h*w个box,后者提供了num_query个box
+        # head输出[num_layer, bs, num_query, nc/4],循环不同layer计算loss
+        # rpn输出[bs, nl*h*w, nc/4]
         if enc_cls_scores is not None:
             proposal_gt_instances = copy.deepcopy(batch_gt_instances)
             for i in range(len(proposal_gt_instances)):
